@@ -960,11 +960,11 @@ Which metric matters depends on what the system is asked to produce. A SLAM syst
 For estimated poses $P_i$, ground-truth poses $Q_i$, and the alignment $S$ between them:
 
 ```math
-\mathrm{ATE}_{\mathrm{RMSE}} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\left\lVert \operatorname{trans}\left(Q_i^{-1}\, S\, P_i\right)\right\rVert^{2}}
+\mathrm{ATE}_{\mathrm{RMSE}} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\left\lVert \mathrm{trans}\left(Q_i^{-1}\, S\, P_i\right)\right\rVert^{2}}
 ```
 
 ```math
-E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right), \qquad \mathrm{RPE}_{\mathrm{trans}} = \sqrt{\frac{1}{M}\sum_{i=1}^{M}\left\lVert \operatorname{trans}(E_i)\right\rVert^{2}}
+E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right), \qquad \mathrm{RPE}_{\mathrm{trans}} = \sqrt{\frac{1}{M}\sum_{i=1}^{M}\left\lVert \mathrm{trans}(E_i)\right\rVert^{2}}
 ```
 
 #### Map & Reconstruction Quality
