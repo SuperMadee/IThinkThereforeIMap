@@ -44,7 +44,7 @@
   - [Radar & Event-based SLAM](#-radar--event-based-slam)
 - [Benchmarks & Evaluation](#-benchmarks--evaluation)
   - [Datasets](#datasets)
-  - [Metrics](#-metrics)
+  - [Metrics](#metrics)
   - [Memory & Long-Horizon Benchmarks](#memory--long-horizon-benchmarks)
   - [Evaluation Tools](#evaluation-tools)
 - [Open-Source Frameworks](#-open-source-frameworks)
@@ -309,7 +309,7 @@ A side-by-side view of widely used systems, one per design family.
 
 ## 📚 Paper Collection
 
-> 🔗 **About the links.** Each entry links to the published version (conference or journal) and is labelled with its venue. `[[arXiv]]` is used only when no published version was found. **Year** is the publication year.
+> 🔗 **About the links.** Each entry links to the published version (conference or journal) and is labeled with its venue. `[[arXiv]]` is used only when no published version was found. **Year** is the year of that published version, or the arXiv year for preprints.
 
 ### 📷 Visual SLAM
 
@@ -485,6 +485,8 @@ A side-by-side view of widely used systems, one per design family.
 
 #### 🔁 **Deep Visual Odometry & End-to-End SLAM**
 
+> **Deep visual odometry** learns depth, pose, or the whole estimation loop from data. The strongest systems keep a geometric core (bundle adjustment) and learn the parts around it.
+
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
 | SfMLearner | 2017 | Learns monocular depth and ego-motion jointly from unlabeled video using view synthesis as the supervisory signal. | [[CVPR]](https://doi.org/10.1109/CVPR.2017.700) [[GitHub]](https://github.com/tinghuiz/SfMLearner) |
@@ -646,6 +648,8 @@ A side-by-side view of widely used systems, one per design family.
 
 #### 🪑 **Object-level & Metric-Semantic SLAM**
 
+> **Object-level and metric-semantic SLAM** adds a fixed vocabulary of meaning to the map: object instances as landmarks, per-surface class labels, and scene graphs built on top of geometry.
+
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
 | SLAM++ | 2013 | SLAM at the level of objects: recognizes known 3D objects and builds a pose graph of object instances. | [[CVPR]](https://doi.org/10.1109/CVPR.2013.178) |
@@ -662,6 +666,8 @@ A side-by-side view of widely used systems, one per design family.
 | Khronos | 2024 | Unified spatio-temporal metric-semantic SLAM that reasons about short-term dynamics and long-term changes in one framework. | [[RSS]](https://doi.org/10.15607/RSS.2024.XX.081) [[GitHub]](https://github.com/MIT-SPARK/Khronos) |
 
 #### 🗣 **Open-Vocabulary Mapping & Scene Graphs**
+
+> **Open-vocabulary mapping** stores vision-language features in the map instead of fixed labels, so the map can be queried with free-form text and handed to a language model for planning.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
@@ -848,6 +854,8 @@ Systems listed under [Feed-Forward & Foundation Model SLAM](#-feed-forward--foun
 
 #### 📷 **Visual Place Recognition**
 
+> **Visual place recognition** retrieves previously seen images of the same place despite changes in viewpoint, lighting, weather, and season.
+
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
 | FAB-MAP | 2008 | Probabilistic appearance-based localization and mapping using a generative bag-of-words model with a Chow-Liu tree. | [[IJRR]](https://doi.org/10.1177/0278364908090961) |
@@ -864,6 +872,8 @@ Systems listed under [Feed-Forward & Foundation Model SLAM](#-feed-forward--foun
 | MegaLoc | 2025 | A single image-retrieval model trained across multiple datasets that performs well on visual place recognition, landmark retrieval, and visual localization. | [[CVPRW]](https://openaccess.thecvf.com/content/CVPR2025W/IMW/html/Berton_MegaLoc_One_Retrieval_to_Place_Them_All_CVPRW_2025_paper.html) [[GitHub]](https://github.com/gmberton/MegaLoc) |
 
 #### 🔦 **LiDAR Place Recognition & Registration**
+
+> **LiDAR place recognition** describes a scan compactly enough to match it against the whole map, and **registration** recovers the relative pose that turns a match into a loop closure constraint.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
@@ -953,7 +963,7 @@ Systems listed under [Feed-Forward & Foundation Model SLAM](#-feed-forward--foun
 | TartanGround | 2025 | Synthetic stereo RGB-D, LiDAR, semantic occupancy | 70 simulated environments for ground robots | [[IROS]](https://doi.org/10.1109/IROS60139.2025.11246002) |
 | M3DGR | 2025 | GNSS, RGB-D, LiDAR, IMU, wheel odometry | Ground robot with systematically induced sensor degradation | [[IROS]](https://doi.org/10.1109/IROS60139.2025.11247507) |
 
-### 📏 Metrics
+### Metrics
 
 Which metric matters depends on what the system is asked to produce. A SLAM system can have an excellent trajectory and a poor map, or the reverse, so results are normally reported per group below. ↓ means lower is better, ↑ means higher is better.
 
@@ -1066,13 +1076,16 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 |------|--------------|------|
 | Odometry for control | RPE, per-frame latency | Success rate, CPU load |
 | Globally consistent SLAM | ATE RMSE | Loop closure precision / recall, success rate |
+| 2D indoor navigation | ATE RMSE, map alignment with a floor plan | CPU load, success rate |
 | Dense geometry for planning | Accuracy, completion, F-score | Map size, mapping FPS |
 | Photorealistic mapping | PSNR / SSIM / LPIPS on held-out views, depth L1 | ATE, number of Gaussians, whole-system FPS |
-| Uncalibrated or feed-forward SLAM | ATE with Sim(3) alignment, pose AUC | Chamfer distance, GPU memory |
-| Semantic and open-vocabulary maps | mIoU, query success | Scene graph precision / recall |
+| Uncalibrated or casual video | ATE with Sim(3) alignment, pose AUC | Chamfer distance, GPU memory |
+| Semantic & language-queryable maps | mIoU, query success | Scene graph precision / recall |
 | Dynamic scenes | ATE in dynamic sequences, object motion error | Moving-object IoU |
-| Multi-robot | Joint ATE, communication volume | Inter-robot loop closure precision |
-| Long-term operation and memory | Map growth rate, cross-session localization | Change detection, embodied QA accuracy |
+| Multi-robot mapping | Joint ATE, communication volume | Inter-robot loop closure precision |
+| Relocalization & map reuse | Recall@K, maximum recall at 100% precision | Registration recall, cross-session localization success |
+| Long-term operation & memory | Map growth rate, cross-session localization | Change detection, embodied QA accuracy |
+| Degraded sensing | Success / completion rate, RPE | ATE on the sequences that survive |
 
 ### Memory & Long-Horizon Benchmarks
 
@@ -1167,12 +1180,12 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 
 ### Surveys & Tutorials
 
-1. Durrant-Whyte and Bailey, "Simultaneous Localization and Mapping: Part I," IEEE RAM, 2006. [[DOI]](https://doi.org/10.1109/MRA.2006.1638022)
-2. Bailey and Durrant-Whyte, "Simultaneous Localization and Mapping (SLAM): Part II," IEEE RAM, 2006. [[DOI]](https://doi.org/10.1109/MRA.2006.1678144)
-3. Grisetti et al., "A Tutorial on Graph-Based SLAM," IEEE ITS Magazine, 2010. [[DOI]](https://doi.org/10.1109/MITS.2010.939925)
-4. Scaramuzza and Fraundorfer, "Visual Odometry: Part I, The First 30 Years and Fundamentals," IEEE RAM, 2011. [[DOI]](https://doi.org/10.1109/MRA.2011.943233)
+1. Durrant-Whyte and Bailey, "Simultaneous Localization and Mapping: Part I," IEEE RAM, 2006. [[RAM]](https://doi.org/10.1109/MRA.2006.1638022)
+2. Bailey and Durrant-Whyte, "Simultaneous Localization and Mapping (SLAM): Part II," IEEE RAM, 2006. [[RAM]](https://doi.org/10.1109/MRA.2006.1678144)
+3. Grisetti et al., "A Tutorial on Graph-Based SLAM," IEEE ITS Magazine, 2010. [[ITS Magazine]](https://doi.org/10.1109/MITS.2010.939925)
+4. Scaramuzza and Fraundorfer, "Visual Odometry: Part I, The First 30 Years and Fundamentals," IEEE RAM, 2011. [[RAM]](https://doi.org/10.1109/MRA.2011.943233)
 5. Cadena et al., "Past, Present, and Future of Simultaneous Localization and Mapping: Toward the Robust-Perception Age," IEEE T-RO, 2016. [[T-RO]](https://doi.org/10.1109/TRO.2016.2624754)
-6. Lowry et al., "Visual Place Recognition: A Survey," IEEE T-RO, 2016. [[DOI]](https://doi.org/10.1109/TRO.2015.2496823)
+6. Lowry et al., "Visual Place Recognition: A Survey," IEEE T-RO, 2016. [[T-RO]](https://doi.org/10.1109/TRO.2015.2496823)
 7. Davison, "FutureMapping: The Computational Structure of Spatial AI Systems," 2018. [[arXiv]](https://arxiv.org/abs/1803.11288)
 8. Huang, "Visual-Inertial Navigation: A Concise Review," ICRA, 2019. [[ICRA]](https://doi.org/10.1109/ICRA.2019.8793604)
 9. Rosen et al., "Advances in Inference and Representation for Simultaneous Localization and Mapping," Annual Review of Control, Robotics, and Autonomous Systems, 2021. [[Annual Reviews]](https://doi.org/10.1146/annurev-control-072720-082553)
@@ -1192,7 +1205,7 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 20. Barfoot, *State Estimation for Robotics*, Cambridge University Press, 2nd ed., 2024. [[PDF]](http://asrl.utias.utoronto.ca/~tdb/bib/barfoot_ser24.pdf)
 21. Gao et al., *Introduction to Visual SLAM: From Theory to Practice*, Springer, 2021. [[GitHub]](https://github.com/gaoxiang12/slambook-en)
 22. Carlone, Kim, Barfoot, Cremers, and Dellaert (eds.), *SLAM Handbook: From Localization and Mapping to Spatial Intelligence*, Cambridge University Press. [[GitHub]](https://github.com/SLAM-Handbook-contributors/slam-handbook-public-release)
-23. Dellaert and Kaess, "Factor Graphs for Robot Perception," Foundations and Trends in Robotics, 2017. [[DOI]](https://doi.org/10.1561/2300000043)
+23. Dellaert and Kaess, "Factor Graphs for Robot Perception," Foundations and Trends in Robotics, 2017. [[FnT]](https://doi.org/10.1561/2300000043)
 24. Carlone et al., MIT 16.485 *Visual Navigation for Autonomous Vehicles (VNAV)*. [[Website]](https://vnav.mit.edu/)
 
 ---
@@ -1226,7 +1239,7 @@ Please make sure any added paper includes:
 
 - The system or paper name as it is commonly known
 - A one-sentence description of what is new, not just what it is
-- A link to the published version labelled with its venue, such as `[[CVPR]]` or `[[T-RO]]` (DOI or official proceedings page); use `[[arXiv]]` only for preprints
+- A link to the published version labeled with its venue, such as `[[CVPR]]` or `[[T-RO]]` (DOI or official proceedings page); use `[[arXiv]]` only for preprints
 - The year of publication (venue year, or arXiv year for preprints)
 - A link to the code, if available
 - Placement in the most specific matching category
