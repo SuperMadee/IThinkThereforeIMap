@@ -4,8 +4,8 @@
 
 **Your Guide to SLAM (Simultaneous Localization and Mapping) in Robotic Systems**
 
-[![Papers](https://img.shields.io/badge/Papers-320+-blue)](#-paper-collection)
-[![Benchmarks](https://img.shields.io/badge/Benchmarks-25+-green)](#-benchmarks--evaluation)
+[![Papers](https://img.shields.io/badge/Papers-350+-blue)](#-paper-collection)
+[![Benchmarks](https://img.shields.io/badge/Benchmarks-30+-green)](#-benchmarks--evaluation)
 [![Frameworks](https://img.shields.io/badge/Frameworks-20+-orange)](#-open-source-frameworks)
 [![References](https://img.shields.io/badge/References-20+-purple)](#-references)
 
@@ -34,12 +34,17 @@
   - [3D Gaussian Splatting SLAM](#-3d-gaussian-splatting-slam)
   - [Feed-Forward & Foundation Model SLAM](#-feed-forward--foundation-model-slam)
   - [Semantic & Open-Vocabulary SLAM](#-semantic--open-vocabulary-slam)
+  - [SLAM with Memory](#-slam-with-memory)
   - [Dynamic SLAM](#-dynamic-slam)
   - [Multi-Robot & Collaborative SLAM](#-multi-robot--collaborative-slam)
   - [Place Recognition & Loop Closure](#-place-recognition--loop-closure)
   - [Back-End Optimization & Robust Estimation](#-back-end-optimization--robust-estimation)
   - [Radar & Event-based SLAM](#-radar--event-based-slam)
 - [Benchmarks & Evaluation](#-benchmarks--evaluation)
+  - [Datasets](#datasets)
+  - [Metrics](#-metrics)
+  - [Memory & Long-Horizon Benchmarks](#memory--long-horizon-benchmarks)
+  - [Evaluation Tools](#evaluation-tools)
 - [Open-Source Frameworks](#-open-source-frameworks)
 - [Applications](#-applications)
 - [Future Directions](#-future-directions)
@@ -61,10 +66,10 @@ SLAM is the cornerstone of autonomy. It is what lets a drone fly without GPS, a 
 
 This repository collects robotic SLAM research, featuring:
 
-- **320+ papers** spanning from foundational works (FastSLAM, 2002; MonoSLAM and PTAM, 2007) to recent feed-forward and Gaussian Splatting systems (2026)
+- **350+ papers** spanning from foundational works (FastSLAM, 2002; MonoSLAM and PTAM, 2007) to recent feed-forward and Gaussian Splatting systems (2026)
 - **Unified taxonomy** organizing research by Sensors × Representations × Pipeline
 - **Task and strength guide** that maps jobs (odometry, dense mapping, semantic maps, multi-robot, …) to the systems best suited to them
-- **25+ datasets, benchmarks, and evaluation tools** (KITTI, TUM RGB-D, EuRoC, Replica, Hilti, evo, etc.)
+- **30+ datasets, benchmarks, and evaluation tools** (KITTI, TUM RGB-D, EuRoC, Replica, Hilti, evo, etc.), with a metrics guide covering trajectory, mapping, rendering, place recognition, efficiency, and memory
 - **20+ open-source frameworks and libraries** (GTSAM, g2o, Ceres, ORB-SLAM3, RTAB-Map, Cartographer, etc.)
 - **20+ references** including surveys, textbooks, and courses that synthesize the field's evolution
 
@@ -79,6 +84,7 @@ This repository collects robotic SLAM research, featuring:
 | **🌈 Neural Scene Representations** | Maps as neural fields or Gaussians | iMAP, NICE-SLAM, SplaTAM, MonoGS, Photo-SLAM |
 | **🚀 Foundation Model SLAM** | Feed-forward 3D reconstruction priors | DUSt3R, MASt3R-SLAM, VGGT, CUT3R, MegaSaM |
 | **💬 Semantic & Open-Vocabulary** | Maps that carry meaning | Kimera, Hydra, ConceptFusion, ConceptGraphs, 3D scene graphs |
+| **💾 SLAM with Memory** | Maps as managed, long-term memory | RTAB-Map memory management, lifelong mapping, learned map memory, spatial memory for embodied agents |
 | **🤖 Multi-Robot SLAM** | Shared maps across robot teams | Kimera-Multi, Swarm-SLAM, COVINS, DOOR-SLAM |
 
 This repository synthesizes insights from surveys, textbooks, and tutorials on SLAM (see [References](#-references)).
@@ -103,9 +109,9 @@ SLAM is distinct from related concepts:
 
 Modern SLAM is formulated as **maximum a posteriori (MAP) estimation** over a factor graph. Given measurements $Z = \{z_k\}$, find the states $X$ (poses, landmarks, calibration) that best explain them:
 
-$$
+```math
 X^{\star} = \arg\max_{X} \; p(X \mid Z) = \arg\min_{X} \sum_{k} \lVert h_k(X_k) - z_k \rVert^{2}_{\Omega_k}
-$$
+```
 
 where $h_k$ is the measurement model of factor $k$ and $\Omega_k$ its information matrix. Almost every system in this repository is a choice of *which sensors produce* $z_k$, *what the map variables in* $X$ *look like*, and *how the minimization is carried out*.
 
@@ -238,6 +244,7 @@ The taxonomy above describes how SLAM systems are *built*. This section classifi
 | **🏃 Dynamic scenes** | Robust poses or explicit object motion when things move | DynaSLAM, DynoSAM, VDO-SLAM, Khronos, WildGS-SLAM, MonST3R, Pi3MOS-SLAM, ERASOR | Either mask out dynamics, or estimate object motion jointly with the camera |
 | **🤝 Multi-robot mapping** | One shared map across a team | Kimera-Multi, Swarm-SLAM, DOOR-SLAM, COVINS, DCL-SLAM, D²SLAM, maplab 2.0 | Inter-robot loop closure, outlier rejection, and communication-aware optimization |
 | **📍 Relocalization & map reuse** | Localize again in a previously built map | ORB-SLAM3, maplab, HF-Net (hloc), DBoW2, AnyLoc, Scan Context, STD | Place recognition plus geometric verification; multi-session map management |
+| **💾 Long-term operation & memory** | A map that stays bounded, current, and queryable over weeks | RTAB-Map, LT-mapper, ELite, Khronos, DynaMem, ReMEmbR, 3D-Mem, Embodied-RAG | Explicit memory management, change handling, and retrieval; see [SLAM with Memory](#-slam-with-memory) |
 | **🌫 Degraded sensing** | Estimation in dark, fog, dust, smoke, or at very high speed | Super Odometry, LVI-SAM, LOCUS 2.0, RadarSLAM, CFEAR Radarodometry, Ultimate SLAM, DEVO | Redundant sensors or modalities (radar, events) that survive when cameras and LiDAR fail |
 
 ---
@@ -673,6 +680,101 @@ A side-by-side view of widely used systems, one per design family.
 
 ---
 
+### 💾 SLAM with Memory
+
+> **SLAM with Memory** covers systems where memory is an explicit design element rather than a side effect of mapping: what to store, what to keep in the active set, what to forget, and how to recall it later. A map *is* a robot's memory of space, and long-running robots and embodied agents need that memory to stay bounded, current, and queryable.
+
+The same lens used in [MemoryIsAwesome](https://github.com/SuperMadee/MemoryIsAwesome) applies directly to SLAM:
+
+| Memory Lens | In SLAM | Examples |
+|-------------|---------|----------|
+| **Formation (Writing)** | Deciding what enters the map: keyframe selection, landmark creation, feature fusion | Keyframe insertion in ORB-SLAM, memory snapshots in 3D-Mem |
+| **Evolution (Management)** | Keeping the map bounded and current: pruning, marginalization, consolidation, forgetting, change handling | Working vs. long-term memory in RTAB-Map, graph pruning, ephemerality in ELite |
+| **Retrieval (Reading)** | Recalling the right part of the map: place recognition, relocalization, spatial and language queries | Loop closure, experience selection, retrieval over a semantic forest in Embodied-RAG |
+| **Token-level form** | Explicit, inspectable maps | Keyframes, point clouds, scene graphs, captions attached to places |
+| **Parametric form** | The map lives in network weights | iMAP, continual-learning SLAM |
+| **Latent form** | The map lives in a recurrent state, feature tokens, or a KV cache | CUT3R, StreamVGGT, Neural Map |
+
+#### 🗄 **Memory Management & Lifelong Maps**
+
+> **Lifelong mapping** asks how a map survives weeks of operation in a changing world. These works bound memory and computation, handle change between sessions, and avoid forgetting places already learned.
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| RTAB-Map Memory Management | 2013 | Keeps only recent and frequently observed locations in working memory for loop closure detection and transfers the rest to long-term memory, bounding online processing time. | [[T-RO]](https://doi.org/10.1109/TRO.2013.2242375) [[GitHub]](https://github.com/introlab/rtabmap) |
+| Experience-based Navigation | 2013 | Stores multiple visual "experiences" of the same place under different conditions and localizes against whichever stored experiences match the live view. | [[IJRR]](https://doi.org/10.1177/0278364913499193) |
+| Geometry-based Graph Pruning | 2021 | Removes vertices and edges to keep the pose graph size reasonable while preserving needed information, with marginalization robust to wrong loop closures. | [[arXiv]](https://arxiv.org/abs/2110.01286) |
+| General Lifelong SLAM Framework | 2021 | Multi-session framework that bounds memory growth by trimming the map with a Chow-Liu maximum-mutual-information spanning tree. | [[arXiv]](https://arxiv.org/abs/2111.10946) |
+| LT-mapper | 2021 | Modular multi-session LiDAR framework that separates changed objects from the map and manages changes while keeping memory and computation costs low. | [[arXiv]](https://arxiv.org/abs/2107.07712) [[GitHub]](https://github.com/gisbi-kim/lt-mapper) |
+| Continual SLAM | 2022 | Dual-network architecture that adapts online to new environments while retaining knowledge of previously visited ones. | [[arXiv]](https://arxiv.org/abs/2203.01578) |
+| BioSLAM | 2022 | Gated generative replay with a dual memory for lifelong place recognition: a dynamic memory learns new observations and a static memory balances new and old knowledge. | [[arXiv]](https://arxiv.org/abs/2208.14543) |
+| POV-SLAM | 2023 | Object-aware SLAM for slowly changing scenes using variational expectation-maximization over factor graphs with a bimodal likelihood for potentially moved objects. | [[arXiv]](https://arxiv.org/abs/2307.00488) |
+| Lost & Found | 2024 | Tracks object interactions from egocentric observations and applies the changes online to a transformable 3D scene graph. | [[arXiv]](https://arxiv.org/abs/2411.19162) |
+| ELite | 2025 | Models each map point's transiency at two time scales (two-stage ephemerality) to maintain a reliable, up-to-date static LiDAR map. | [[arXiv]](https://arxiv.org/abs/2502.13452) [[GitHub]](https://github.com/dongjae0107/ELite) |
+
+#### 🧬 **Bio-inspired & Learned Map Memory**
+
+> **Learned map memory** replaces the hand-built map with a memory the agent learns to write and read, from hippocampus-inspired attractor networks to differentiable spatial memories trained end-to-end for navigation.
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| RatSLAM | 2004 | Hippocampus-inspired SLAM that represents pose in a competitive attractor network of pose cells associated with local view cells. | [[ICRA]](https://doi.org/10.1109/ROBOT.2004.1307183) |
+| Neural Map | 2017 | Spatially structured 2D memory with a learned write operator that stores environment information over long time lags for a deep RL agent. | [[arXiv]](https://arxiv.org/abs/1702.08360) |
+| Cognitive Mapping and Planning | 2017 | Accumulates first-person observations into a latent top-down belief map that a differentiable planner uses to act in partially observed environments. | [[arXiv]](https://arxiv.org/abs/1702.03920) |
+| Neural SLAM | 2017 | Embeds SLAM-like procedures into soft-attention addressing of an external memory that serves as the agent's internal representation of the environment. | [[arXiv]](https://arxiv.org/abs/1706.09520) |
+| MapNet | 2018 | Allocentric spatial memory that is updated dynamically while localization and registration are performed with paired convolution and deconvolution operations. | [[CVPR]](https://openaccess.thecvf.com/content_cvpr_2018/html/Henriques_MapNet_An_Allocentric_CVPR_2018_paper.html) |
+| SPTM | 2018 | Semi-parametric topological memory: a non-parametric graph of locations plus a deep network that retrieves graph nodes from observations. | [[arXiv]](https://arxiv.org/abs/1803.00653) |
+| Scene Memory Transformer | 2019 | Embeds every observation into a scene memory and attends over it to capture spatio-temporal dependencies for long-horizon decisions. | [[arXiv]](https://arxiv.org/abs/1903.03878) |
+| Active Neural SLAM | 2020 | Modular exploration system whose learned Neural SLAM module builds the map and pose estimate used by global and local policies. | [[arXiv]](https://arxiv.org/abs/2004.05155) [[GitHub]](https://github.com/devendrachaplot/Neural-SLAM) |
+| Neural Topological SLAM | 2020 | Builds and maintains a topological map whose nodes carry semantic features and are connected using coarse geometric information. | [[arXiv]](https://arxiv.org/abs/2005.12256) |
+| Semantic MapNet | 2020 | Spatial memory tensor that accumulates projected egocentric features into an allocentric representation decoded into semantic maps. | [[arXiv]](https://arxiv.org/abs/2010.01191) |
+
+#### 🔁 **Memory in Streaming Feed-Forward Reconstruction**
+
+> **Streaming feed-forward models** carry the scene in a learned memory instead of an optimized map. Their central problem is a memory problem: how to keep long sequences consistent without the state growing without bound or drifting.
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| LONG3R | 2025 | 3D spatio-temporal memory that prunes redundant spatial information and adapts resolution, plus a memory gating mechanism that filters relevant memory. | [[arXiv]](https://arxiv.org/abs/2507.18255) |
+| STAC | 2026 | Plug-and-play cache compression that keeps long-term informative tokens by decayed cumulative attention and compresses redundant tokens into voxel-aligned representations. | [[arXiv]](https://arxiv.org/abs/2603.20284) |
+| RetrieveVGGT | 2026 | Training-free retrieval of a fixed number of relevant history frames per step, organized by a pose-aware spatial memory. | [[arXiv]](https://arxiv.org/abs/2605.09644) [[GitHub]](https://github.com/zzctmd/RetrieveVGGT) |
+
+Systems listed under [Feed-Forward & Foundation Model SLAM](#-feed-forward--foundation-model-slam), by memory mechanism:
+
+| System | Memory Mechanism |
+|--------|------------------|
+| Spann3R | External spatial memory of past pointmap features, queried for each new frame |
+| CUT3R | Persistent recurrent state that is read and updated online |
+| TTT3R | Confidence-based update rate for that state, treating reconstruction as online learning |
+| MUSt3R | Multi-layer memory that lets new views attend to previously processed ones |
+| Point3R | Explicit pointer memory anchored at 3D positions |
+| StreamVGGT | Cached token memory with causal attention |
+| InfiniteVGGT | Bounded, adaptively pruned KV cache for unbounded streams |
+| LingBot-Map | Anchor context, pose-reference window, and trajectory memory |
+
+#### 🤖 **Spatial Memory for Embodied Agents**
+
+> **Spatial memory for agents** treats the map as the long-term memory a language model or policy reads from and writes to. See also CLIP-Fields, ReMEmbR, DynaMem, ConceptGraphs, and Clio under [Semantic & Open-Vocabulary SLAM](#-semantic--open-vocabulary-slam), and Khronos for spatio-temporal maps.
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| GOAT | 2023 | Continually augmented instance-aware semantic memory storing object appearance from multiple viewpoints alongside category-level semantics for lifelong multimodal goal navigation. | [[arXiv]](https://arxiv.org/abs/2311.06430) |
+| Mobility VLA | 2024 | A long-context VLM finds the goal frame in a previously recorded tour video, and a topological graph built offline from the tour drives low-level actions. | [[arXiv]](https://arxiv.org/abs/2407.07775) |
+| KARMA | 2024 | Long-term memory holds a 3D scene graph while short-term memory records changes in object positions and states for LLM planning. | [[arXiv]](https://arxiv.org/abs/2409.14908) [[GitHub]](https://github.com/WZX0Swarm0Robotics/KARMA) |
+| Embodied-RAG | 2024 | Non-parametric memory organized as a semantic forest storing language descriptions at multiple levels of detail for hierarchical retrieval in navigation and dialogue. | [[arXiv]](https://arxiv.org/abs/2409.18313) [[GitHub]](https://github.com/quanting-xie/Embodied_RAG) |
+| 3D-Mem | 2024 | Represents explored regions as multi-view memory snapshots and unexplored regions as frontier snapshots, with incremental construction and retrieval for VLM agents. | [[arXiv]](https://arxiv.org/abs/2411.17735) [[GitHub]](https://github.com/UMass-Embodied-AGI/3D-Mem) |
+| Embodied VideoAgent | 2025 | Builds persistent scene memory from egocentric video with depth and pose, with a VLM updating the memory when object actions are perceived. | [[arXiv]](https://arxiv.org/abs/2501.00358) [[GitHub]](https://github.com/Embodied-VideoAgent/embodied-videoagent) |
+| MapNav | 2025 | Replaces stored historical frames with an annotated semantic map: a top-down map updated each timestep with text labels on key regions. | [[arXiv]](https://arxiv.org/abs/2502.13451) |
+| Mem2Ego | 2025 | Adaptively retrieves task-relevant cues from a global memory module and integrates them with the agent's egocentric observations for VLM navigation. | [[arXiv]](https://arxiv.org/abs/2502.14254) |
+| 3DLLM-Mem | 2025 | Working-memory tokens for current observations query and fuse the most useful spatial and temporal features from an episodic memory of past observations. | [[arXiv]](https://arxiv.org/abs/2505.22657) |
+| Mem4Nav | 2025 | Fuses a sparse octree for voxel indexing with a semantic topology graph, stored in trainable long-term memory tokens, plus a short-term cache. | [[arXiv]](https://arxiv.org/abs/2506.19433) |
+| MTU3D | 2025 | Online query-based representation learning builds spatial memory directly from RGB-D frames, without explicit 3D reconstruction, for grounding and exploration. | [[arXiv]](https://arxiv.org/abs/2507.04047) [[GitHub]](https://github.com/MTU3D/MTU3D) |
+| RoboMemory | 2025 | Brain-inspired framework integrating spatial, temporal, episodic, and semantic memory, with a dynamic spatial knowledge graph for consistent memory updates. | [[arXiv]](https://arxiv.org/abs/2508.01415) |
+| Meta-Memory | 2025 | LLM-driven agent that builds a dense memory of the environment and retrieves memories by joint reasoning over semantic and spatial modalities. | [[arXiv]](https://arxiv.org/abs/2509.20754) |
+| JanusVLN | 2025 | Dual implicit memory built from historical key-value caches of the spatial-geometric and visual-semantic encoders, kept as compact fixed-size representations. | [[arXiv]](https://arxiv.org/abs/2509.22548) |
+
+---
+
 ### 🏃 Dynamic SLAM
 
 > **Dynamic SLAM** drops the static-world assumption. Systems either *filter out* moving objects to protect the estimator, or *model* them explicitly by tracking object motion alongside the camera.
@@ -839,18 +941,130 @@ A side-by-side view of widely used systems, one per design family.
 | TartanGround | 2025 | Synthetic stereo RGB-D, LiDAR, semantic occupancy | 70 simulated environments for ground robots | [[arXiv]](https://arxiv.org/abs/2505.10696) |
 | M3DGR | 2025 | GNSS, RGB-D, LiDAR, IMU, wheel odometry | Ground robot with systematically induced sensor degradation | [[arXiv]](https://arxiv.org/abs/2507.08364) |
 
-### Metrics
+### 📏 Metrics
 
-| Metric | Measures | Used For |
-|--------|----------|----------|
-| **ATE (Absolute Trajectory Error)** | Global consistency of the estimated trajectory after alignment | Overall SLAM accuracy |
-| **RPE (Relative Pose Error)** | Local drift over a fixed time or distance | Odometry quality |
-| **Translation / Rotation Drift (%, deg/m)** | Error averaged over path segments | KITTI-style odometry benchmarks |
-| **Accuracy / Completion / Chamfer / F-score** | Distance between reconstructed and ground-truth surfaces | Dense mapping quality |
-| **Depth L1** | Error of rendered depth | Neural and Gaussian SLAM geometry |
-| **PSNR / SSIM / LPIPS** | Fidelity of rendered images | Photorealistic mapping |
-| **Recall@K / Precision-Recall** | Retrieval correctness | Place recognition and loop closure |
-| **FPS / Memory / Map Size** | Runtime and resource cost | Deployability on real robots |
+Which metric matters depends on what the system is asked to produce. A SLAM system can have an excellent trajectory and a poor map, or the reverse, so results are normally reported per group below. ↓ means lower is better, ↑ means higher is better.
+
+#### Trajectory Accuracy
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **ATE (Absolute Trajectory Error), RMSE** | Global consistency: distance between estimated and ground-truth positions after aligning the two trajectories | ↓ | SE(3) alignment for metric systems, Sim(3) for monocular. The default on TUM RGB-D, EuRoC, and Replica |
+| **RPE (Relative Pose Error), translation and rotation** | Local drift over a fixed time or distance interval | ↓ | The right metric for odometry, since it is not dominated by one early error |
+| **KITTI relative drift, t_rel (%) and r_rel (°/100 m)** | Translation and rotation error averaged over sub-sequences of 100 to 800 m | ↓ | Standard for driving-scale odometry |
+| **Scale error / scale drift** | How far the estimated scale is from metric, and how it changes along the path | ↓ | Monocular systems only |
+| **Pose AUC@τ, RRA / RTA** | Share of frame pairs whose relative rotation and translation angular errors fall under a threshold | ↑ | Common for feed-forward reconstruction models |
+| **NEES / NIS (consistency)** | Whether the estimator's reported covariance matches its actual error | ≈ state dimension | Used for filters and VIO; an overconfident estimator is unsafe to fuse |
+| **Success / completion rate** | Fraction of sequences or of the trajectory tracked without failure | ↑ | Robustness; always report alongside ATE, which is only defined where tracking survived |
+
+For estimated poses $P_i$, ground-truth poses $Q_i$, and the alignment $S$ between them:
+
+```math
+\mathrm{ATE}_{\mathrm{RMSE}} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\left\lVert \operatorname{trans}\left(Q_i^{-1}\, S\, P_i\right)\right\rVert^{2}}
+```
+
+```math
+E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right), \qquad \mathrm{RPE}_{\mathrm{trans}} = \sqrt{\frac{1}{M}\sum_{i=1}^{M}\left\lVert \operatorname{trans}(E_i)\right\rVert^{2}}
+```
+
+#### Map & Reconstruction Quality
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **Accuracy (cm)** | Mean distance from reconstructed points to the nearest ground-truth surface | ↓ | Penalizes wrong geometry |
+| **Completion (cm)** | Mean distance from ground-truth points to the nearest reconstructed surface | ↓ | Penalizes missing geometry |
+| **Completion ratio (%)** | Share of ground-truth points with a reconstructed point within a threshold (often 5 cm) | ↑ | |
+| **Chamfer distance** | Average of accuracy and completion | ↓ | |
+| **F-score@τ** | Harmonic mean of precision and recall at distance threshold τ | ↑ | Less sensitive to outliers than Chamfer |
+| **Depth L1 (cm)** | Error between rendered and ground-truth depth | ↓ | Standard for neural implicit and Gaussian SLAM |
+| **Mean map entropy** | Sharpness of a point cloud map, computed without ground truth | ↓ | Useful for LiDAR maps in the field |
+
+#### Rendering Quality
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **PSNR (dB)** | Pixel-wise fidelity of rendered images | ↑ | |
+| **SSIM** | Structural similarity to the reference image | ↑ | |
+| **LPIPS** | Perceptual distance in a learned feature space | ↓ | |
+
+> ⚠ Many SLAM papers report rendering metrics on the *training* views. Scores on held-out novel views are lower and say more about map quality, so check which one is being reported.
+
+#### Place Recognition & Loop Closure
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **Recall@K** | Share of queries with a correct match in the top K retrievals (within a distance threshold) | ↑ | Standard for VPR and LiDAR place recognition |
+| **Precision-recall curve, AUC / average precision** | Trade-off between false and missed loop closures | ↑ | |
+| **Maximum recall at 100% precision** | How many loops are found with zero false positives | ↑ | The most SLAM-relevant number, since one false loop can corrupt the map |
+| **Registration recall, relative rotation / translation error** | Whether the pose estimated for a detected loop is correct | ↑ / ↓ | For geometric verification and registration |
+
+#### Semantic & Open-Vocabulary Mapping
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **mIoU, mAcc, fwIoU** | Per-class overlap and accuracy of 3D semantic labels | ↑ | |
+| **Panoptic quality (PQ)** | Joint segmentation and instance recognition quality | ↑ | |
+| **Open-vocabulary query success / retrieval recall** | Whether a text query returns the correct object or region | ↑ | |
+| **Scene graph node and edge precision / recall** | Correctness of detected objects, rooms, and relations | ↑ | |
+
+#### Dynamic Scenes
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **Object motion error** | Per-object relative pose error in translation and rotation | ↓ | Object-aware SLAM such as VDO-SLAM and DynoSAM |
+| **Moving-object segmentation IoU** | Overlap between predicted and true moving points or pixels | ↑ | |
+| **Preservation rate / rejection rate** | Share of static points kept and of dynamic points removed when cleaning a map | ↑ | Static LiDAR map building, introduced with ERASOR |
+
+#### Efficiency & Resources
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **FPS (tracking, mapping, whole system)** | Throughput | ↑ | Report whole-system FPS; tracking-only numbers hide slow mapping |
+| **Per-frame latency** | Delay from sensor input to pose output | ↓ | What matters for closed-loop control |
+| **Peak RAM / GPU memory** | Runtime memory | ↓ | |
+| **Map size (MB, parameters, number of Gaussians)** | Storage cost of the map | ↓ | |
+| **CPU load / power** | Compute and energy budget | ↓ | Decides whether it runs onboard |
+
+#### Multi-Robot
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **Joint ATE in a common frame** | Accuracy of all robot trajectories after merging | ↓ | |
+| **Inter-robot loop closure precision / recall** | Quality of cross-robot data association | ↑ | |
+| **Communication volume (kB, messages)** | Data exchanged between robots | ↓ | |
+
+#### Memory & Long-Term Operation
+
+| Metric | What It Measures | Better | Notes |
+|--------|------------------|:------:|-------|
+| **Map growth rate** | How map size and processing time scale with operating time and revisits | Bounded | The core test of memory management |
+| **Cross-session localization success / ATE** | Whether the robot still localizes in a map built days or seasons earlier | ↑ / ↓ | |
+| **Change detection precision / recall** | Whether added, removed, and moved objects are found | ↑ | |
+| **Forgetting** | Drop in performance on earlier environments after adapting to new ones | ↓ | Continual-learning SLAM |
+| **Memory retrieval recall** | Whether the relevant stored observation is recalled for a query | ↑ | |
+| **Embodied QA accuracy, task success, SPL** | Whether an agent using the memory answers correctly or reaches the goal efficiently | ↑ | OpenEQA, GOAT-Bench |
+
+#### Which Metric for Which Task?
+
+| Task | Report First | Then |
+|------|--------------|------|
+| Odometry for control | RPE, per-frame latency | Success rate, CPU load |
+| Globally consistent SLAM | ATE RMSE | Loop closure precision / recall, success rate |
+| Dense geometry for planning | Accuracy, completion, F-score | Map size, mapping FPS |
+| Photorealistic mapping | PSNR / SSIM / LPIPS on held-out views, depth L1 | ATE, number of Gaussians, whole-system FPS |
+| Uncalibrated or feed-forward SLAM | ATE with Sim(3) alignment, pose AUC | Chamfer distance, GPU memory |
+| Semantic and open-vocabulary maps | mIoU, query success | Scene graph precision / recall |
+| Dynamic scenes | ATE in dynamic sequences, object motion error | Moving-object IoU |
+| Multi-robot | Joint ATE, communication volume | Inter-robot loop closure precision |
+| Long-term operation and memory | Map growth rate, cross-session localization | Change detection, embodied QA accuracy |
+
+### Memory & Long-Horizon Benchmarks
+
+| Benchmark | Year | What It Tests | Links |
+|-----------|------|---------------|-------|
+| OpenEQA | 2024 | Open-vocabulary embodied question answering over 180+ real environments, including an episodic-memory setting where agents answer from past observations. | [[CVPR]](https://openaccess.thecvf.com/content/CVPR2024/html/Majumdar_OpenEQA_Embodied_Question_Answering_in_the_Era_of_Foundation_Models_CVPR_2024_paper.html) [[GitHub]](https://github.com/facebookresearch/open-eqa) |
+| GOAT-Bench | 2024 | Multi-modal lifelong navigation over sequences of object, language, and image goals, comparing explicit and implicit scene memories. | [[arXiv]](https://arxiv.org/abs/2404.06609) [[GitHub]](https://github.com/Ram81/goat-bench) |
+| FindingDory | 2025 | Whether embodied agents can recall relevant information from long past experience and act on it. | [[arXiv]](https://arxiv.org/abs/2506.15635) [[GitHub]](https://github.com/findingdory-benchmark/findingdory-habitat) |
 
 ### Evaluation Tools
 
