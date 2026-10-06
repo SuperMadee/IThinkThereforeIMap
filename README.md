@@ -9,7 +9,7 @@
 [![Frameworks](https://img.shields.io/badge/Frameworks-20+-orange)](#-open-source-frameworks)
 [![References](https://img.shields.io/badge/References-20+-purple)](#-references)
 
-<img src="assets/slam-loop.svg" width="720" alt="A robot localizes and maps while its estimated trajectory drifts; a loop closure then corrects the drift into one consistent map">
+<img src="figures/slam-loop.svg" width="720" alt="A robot localizes and maps while its estimated trajectory drifts; a loop closure then corrects the drift into one consistent map">
 
 </div>
 
@@ -210,7 +210,7 @@ Representations determine HOW the world is stored.
 The pipeline describes the operational lifecycle of a SLAM system.
 
 <p align="center">
-  <img src="assets/slam-pipeline.svg" width="720" alt="The SLAM pipeline: sensors feed the front-end, the back-end optimizes, the map is updated, and loop closure feeds back">
+  <img src="figures/slam-pipeline.svg" width="720" alt="The SLAM pipeline: sensors feed the front-end, the back-end optimizes, the map is updated, and loop closure feeds back">
 </p>
 
 | Stage | Role | Description | Strategies |
@@ -693,7 +693,7 @@ A side-by-side view of widely used systems, one per design family.
 > **SLAM with Memory** covers systems where memory is an explicit design element rather than a side effect of mapping: what to store, what to keep in the active set, what to forget, and how to recall it later. A map *is* a robot's memory of space, and long-running robots and embodied agents need that memory to stay bounded, current, and queryable.
 
 <p align="center">
-  <img src="assets/memory-lifecycle.svg" width="720" alt="Map memory lifecycle: formation writes observations, evolution forgets and consolidates, retrieval recalls the relevant part">
+  <img src="figures/memory-lifecycle.svg" width="720" alt="Map memory lifecycle: formation writes observations, evolution forgets and consolidates, retrieval recalls the relevant part">
 </p>
 
 The same lens used in [MemoryIsAwesome](https://github.com/SuperMadee/MemoryIsAwesome) applies directly to SLAM:
@@ -980,7 +980,7 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 ```
 
 <p align="center">
-  <img src="assets/ate-rpe.svg" width="720" alt="ATE measures global error between aligned trajectories; RPE measures local drift over a fixed interval">
+  <img src="figures/ate-rpe.svg" width="720" alt="ATE measures global error between aligned trajectories; RPE measures local drift over a fixed interval">
 </p>
 
 #### Map & Reconstruction Quality
