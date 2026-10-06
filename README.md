@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🧭 I Think, Therefore I Map
+# 🦾 I Think, Therefore I Move
 
-**Your Guide to SLAM (Simultaneous Localization and Mapping) in Robotic Systems**
+**Your Guide to Robot Kinematics: From Joint Angles to Motion in Robotic Systems**
 
-[![Papers](https://img.shields.io/badge/Papers-350+-blue)](#-paper-collection)
-[![Benchmarks](https://img.shields.io/badge/Benchmarks-30+-green)](#-benchmarks--evaluation)
-[![Frameworks](https://img.shields.io/badge/Frameworks-20+-orange)](#-open-source-frameworks)
-[![References](https://img.shields.io/badge/References-20+-purple)](#-references)
+[![Papers](https://img.shields.io/badge/Papers-130+-blue)](#-paper-collection)
+[![Benchmarks](https://img.shields.io/badge/Benchmarks-10+-green)](#-benchmarks--evaluation)
+[![Frameworks](https://img.shields.io/badge/Frameworks-30+-orange)](#-open-source-frameworks)
+[![References](https://img.shields.io/badge/References-25+-purple)](#-references)
 
 </div>
 
@@ -16,35 +16,31 @@
 ## 📖 Table of Contents
 
 - [Introduction](#-introduction)
-- [What is SLAM?](#-what-is-slam)
+- [What is Robot Kinematics?](#-what-is-robot-kinematics)
 - [Unified Taxonomy](#-unified-taxonomy)
-  - [Sensors](#-sensors-what-perceives-the-world)
-  - [Map Representations](#-map-representations-what-is-the-map-made-of)
-  - [Pipeline](#-pipeline-how-does-slam-work)
-- [Systems by Task & Strength](#-systems-by-task--strength)
-  - [By Task](#-by-task-what-do-you-need-from-slam)
-  - [By Strength](#-by-strength-what-is-each-system-best-at)
-  - [System Profiles at a Glance](#-system-profiles-at-a-glance)
+  - [Mechanisms](#-mechanisms-what-is-moving)
+  - [Motion Representations](#-motion-representations-how-is-motion-described)
+  - [Problems](#-problems-what-is-being-solved)
+- [Methods by Task & Strength](#-methods-by-task--strength)
+  - [By Task](#-by-task-what-do-you-need-from-kinematics)
+  - [By Strength](#-by-strength-what-is-each-method-best-at)
+  - [Solver Profiles at a Glance](#-solver-profiles-at-a-glance)
 - [Paper Collection](#-paper-collection)
-  - [Visual SLAM](#-visual-slam)
-  - [Visual-Inertial Odometry & SLAM](#-visual-inertial-odometry--slam)
-  - [LiDAR SLAM](#-lidar-slam)
-  - [Learning-based SLAM](#-learning-based-slam)
-  - [Neural Implicit SLAM](#-neural-implicit-slam)
-  - [3D Gaussian Splatting SLAM](#-3d-gaussian-splatting-slam)
-  - [Feed-Forward & Foundation Model SLAM](#-feed-forward--foundation-model-slam)
-  - [Semantic & Open-Vocabulary SLAM](#-semantic--open-vocabulary-slam)
-  - [SLAM with Memory](#-slam-with-memory)
-  - [Dynamic SLAM](#-dynamic-slam)
-  - [Multi-Robot & Collaborative SLAM](#-multi-robot--collaborative-slam)
-  - [Place Recognition & Loop Closure](#-place-recognition--loop-closure)
-  - [Back-End Optimization & Robust Estimation](#-back-end-optimization--robust-estimation)
-  - [Radar & Event-based SLAM](#-radar--event-based-slam)
+  - [Kinematic Modeling & Conventions](#-kinematic-modeling--conventions)
+  - [Rotation & Pose Representations](#-rotation--pose-representations)
+  - [Analytical Inverse Kinematics](#-analytical-inverse-kinematics)
+  - [Numerical & Optimization-based Inverse Kinematics](#-numerical--optimization-based-inverse-kinematics)
+  - [Differential Kinematics, Redundancy & Singularities](#-differential-kinematics-redundancy--singularities)
+  - [Learning-based Kinematics](#-learning-based-kinematics)
+  - [Differentiable & GPU-Accelerated Kinematics](#-differentiable--gpu-accelerated-kinematics)
+  - [Parallel & Closed-Chain Mechanisms](#-parallel--closed-chain-mechanisms)
+  - [Mobile Robot Kinematics](#-mobile-robot-kinematics)
+  - [Legged & Humanoid Whole-Body Kinematics](#-legged--humanoid-whole-body-kinematics)
+  - [Motion Retargeting](#-motion-retargeting)
+  - [Continuum & Soft Robot Kinematics](#-continuum--soft-robot-kinematics)
+  - [Kinematic Calibration & Hand-Eye](#-kinematic-calibration--hand-eye)
+  - [Workspace, Reachability & Dexterity](#-workspace-reachability--dexterity)
 - [Benchmarks & Evaluation](#-benchmarks--evaluation)
-  - [Datasets](#datasets)
-  - [Metrics](#-metrics)
-  - [Memory & Long-Horizon Benchmarks](#memory--long-horizon-benchmarks)
-  - [Evaluation Tools](#evaluation-tools)
 - [Open-Source Frameworks](#-open-source-frameworks)
 - [Applications](#-applications)
 - [Future Directions](#-future-directions)
@@ -56,1077 +52,691 @@
 
 ## 🎯 Introduction
 
-A robot that cannot answer **"Where am I?"** and **"What does the world around me look like?"** cannot do much else. **Simultaneous Localization and Mapping (SLAM)** is the problem of answering both questions at once: building a map of an unknown environment while estimating the robot's pose inside that map, using only onboard sensors.
+A robot that cannot answer **"Where is my hand, given my joints?"** and **"How must my joints move to put it over there?"** cannot do much else. **Robot kinematics** is the study of that relationship: the geometry of motion, described without reference to the forces that cause it.
 
-SLAM is the cornerstone of autonomy. It is what lets a drone fly without GPS, a vacuum cleaner cover a whole apartment, a legged robot traverse a cave, and an AR headset pin a virtual object to a real table. In the era of embodied AI, the map is also becoming the robot's **spatial memory** — the structure that language models and policies query to reason about the physical world.
+Kinematics is the layer every other part of the stack stands on. Motion planners search in the joint space it defines, controllers track the velocities it maps, calibration corrects the parameters it assumes, and learned policies output actions that it turns into motor commands. Whether the machine is a six-axis arm on a factory floor, a humanoid copying a human demonstration, a surgical continuum robot, or a car parking itself, the first question is kinematic.
 
-> 🧠 **Sister repository:** if a map is a robot's spatial memory, [MemoryIsAwesome](https://github.com/SuperMadee/MemoryIsAwesome) covers the rest of the memory story for foundation model agents.
+> 🧭 **Sister repository:** once a robot knows how it moves, it needs to know where it is. [IThinkThereforeIMap](https://github.com/SuperMadee/IThinkThereforeIMap) covers SLAM, and [MemoryIsAwesome](https://github.com/SuperMadee/MemoryIsAwesome) covers memory for foundation model agents.
 
 ### 📊 Repository Highlights
 
-This repository collects robotic SLAM research, featuring:
+This repository collects robot kinematics research, featuring:
 
-- **350+ papers** spanning from foundational works (FastSLAM, 2002; MonoSLAM and PTAM, 2007) to recent feed-forward and Gaussian Splatting systems (2026)
-- **Unified taxonomy** organizing research by Sensors × Representations × Pipeline
-- **Task and strength guide** that maps jobs (odometry, dense mapping, semantic maps, multi-robot, …) to the systems best suited to them
-- **30+ datasets, benchmarks, and evaluation tools** (KITTI, TUM RGB-D, EuRoC, Replica, Hilti, evo, etc.), with a metrics guide covering trajectory, mapping, rendering, place recognition, efficiency, and memory
-- **20+ open-source frameworks and libraries** (GTSAM, g2o, Ceres, ORB-SLAM3, RTAB-Map, Cartographer, etc.)
-- **20+ references** including surveys, textbooks, and courses that synthesize the field's evolution
+- **130+ papers** spanning from foundational works (Denavit-Hartenberg, 1955; Pieper, 1968; Whitney, 1969) to GPU-batched and generative inverse kinematics (2025)
+- **Unified taxonomy** organizing research by Mechanisms × Representations × Problems
+- **Task and strength guide** that maps jobs (closed-form IK, redundancy resolution, whole-body control, calibration, …) to the methods best suited to them
+- **10+ robot model collections, motion datasets, standards, and evaluation tools** (MuJoCo Menagerie, robot_descriptions, AMASS, ISO 9283, etc.)
+- **30+ open-source frameworks and libraries** (Pinocchio, Drake, KDL, MoveIt 2, TRAC-IK, cuRobo, etc.)
+- **25+ references** including surveys, tutorials, textbooks, and courses
 
 ### 🔬 Coverage Areas
 
 | Category | Description | Key Topics |
 |----------|-------------|------------|
-| **📷 Visual SLAM** | Cameras as the primary sensor | Feature-based (ORB-SLAM), direct (DSO, LSD-SLAM), dense RGB-D (KinectFusion, ElasticFusion) |
-| **🧲 Visual-Inertial** | Cameras tightly fused with IMUs | MSCKF, OKVIS, VINS-Mono, Basalt, OpenVINS, IMU preintegration |
-| **🔦 LiDAR SLAM** | Range sensing for large-scale mapping | LOAM, LIO-SAM, FAST-LIO2, KISS-ICP, LiDAR-visual-inertial fusion |
-| **🧠 Learning-based SLAM** | Learned odometry, depth, and matching | DROID-SLAM, DPVO, SuperPoint, LightGlue, TartanVO |
-| **🌈 Neural Scene Representations** | Maps as neural fields or Gaussians | iMAP, NICE-SLAM, SplaTAM, MonoGS, Photo-SLAM |
-| **🚀 Foundation Model SLAM** | Feed-forward 3D reconstruction priors | DUSt3R, MASt3R-SLAM, VGGT, CUT3R, MegaSaM |
-| **💬 Semantic & Open-Vocabulary** | Maps that carry meaning | Kimera, Hydra, ConceptFusion, ConceptGraphs, 3D scene graphs |
-| **💾 SLAM with Memory** | Maps as managed, long-term memory | RTAB-Map memory management, lifelong mapping, learned map memory, spatial memory for embodied agents |
-| **🤖 Multi-Robot SLAM** | Shared maps across robot teams | Kimera-Multi, Swarm-SLAM, COVINS, DOOR-SLAM |
+| **📐 Modeling** | Describing a mechanism's geometry | Denavit-Hartenberg parameters, product of exponentials, screw theory, URDF |
+| **🔄 Representations** | Describing rotation and pose | Rotation matrices, quaternions, dual quaternions, Lie groups SO(3) and SE(3) |
+| **🧮 Analytical IK** | Closed-form joint solutions | Pieper's criterion, subproblem decomposition, IKFast, general 6R |
+| **🔁 Numerical IK** | Iterative and optimization-based solvers | Damped least squares, Levenberg-Marquardt, TRAC-IK, RelaxedIK, QP-based IK |
+| **📈 Differential Kinematics** | Velocity-level mapping and control | Jacobians, manipulability, null-space projection, task priority, singularities |
+| **🧠 Learning-based** | Learned IK and learned kinematic models | IKFlow, generative IK, self-modeling, Neural Jacobian Fields |
+| **🕸 Beyond Serial Arms** | Other mechanism families | Parallel robots, wheeled robots, legged robots and humanoids, continuum robots |
+| **🎯 Calibration** | Making the model match the hardware | Geometric parameter identification, hand-eye calibration, observability indices |
 
-This repository synthesizes insights from surveys, textbooks, and tutorials on SLAM (see [References](#-references)).
+This repository synthesizes insights from surveys, textbooks, and tutorials on kinematics (see [References](#-references)).
 
 ---
 
-## 🧩 What is SLAM?
+## 🧩 What is Robot Kinematics?
 
 ### Conceptual Distinction
 
-SLAM is distinct from related concepts:
+Kinematics is distinct from related concepts:
 
 | Concept | Description | Key Difference |
 |---------|-------------|----------------|
-| **Odometry (VO / LO / VIO)** | Incremental motion estimation from consecutive sensor frames | Locally accurate but drifts without bound; no loop closure or global map |
-| **Localization** | Estimating pose inside a map that already exists | The map is given and fixed, not built online |
-| **Mapping** | Building a map from sensor data with known poses | Assumes localization is already solved (e.g., by GPS or motion capture) |
-| **Structure from Motion (SfM)** | Offline 3D reconstruction from unordered images | Batch processing with no real-time or causal constraint |
-| **SLAM** | Online, joint estimation of trajectory and map | Real-time, incremental, and globally consistent through loop closure |
+| **Statics** | Forces and torques on a mechanism at rest | No motion; linked to kinematics through the Jacobian transpose |
+| **Dynamics** | How forces and torques produce motion | Adds mass, inertia, and time; kinematics is the geometric part it builds on |
+| **Motion Planning** | Finding a collision-free path between configurations | Searches the space that kinematics defines; calls FK and IK as subroutines |
+| **Control** | Making the real robot follow a desired motion | Closes a feedback loop; kinematics provides the model inside it |
+| **State Estimation** | Inferring configuration or pose from sensors | Uses kinematic models as measurement or motion models |
+| **Kinematics** | The geometry of motion: position, velocity, and acceleration relationships | No forces, no masses; purely how joint motion maps to body motion |
 
-### The SLAM Problem in One Equation
+### The Kinematics Problem in Three Equations
 
-Modern SLAM is formulated as **maximum a posteriori (MAP) estimation** over a factor graph. Given measurements $Z = \{z_k\}$, find the states $X$ (poses, landmarks, calibration) that best explain them:
+For a robot with joint configuration $q \in \mathbb{R}^n$, **forward kinematics** gives the end-effector pose as a product of joint motions. In the product-of-exponentials form, with joint screw axes $\mathcal{S}_i$ and home pose $M$:
 
-```math
-X^{\star} = \arg\max_{X} \; p(X \mid Z) = \arg\min_{X} \sum_{k} \lVert h_k(X_k) - z_k \rVert^{2}_{\Omega_k}
-```
+$$
+T(q) = e^{[\mathcal{S}_1] q_1} \, e^{[\mathcal{S}_2] q_2} \cdots e^{[\mathcal{S}_n] q_n} \, M \;\in SE(3)
+$$
 
-where $h_k$ is the measurement model of factor $k$ and $\Omega_k$ its information matrix. Almost every system in this repository is a choice of *which sensors produce* $z_k$, *what the map variables in* $X$ *look like*, and *how the minimization is carried out*.
+**Differential kinematics** linearizes this map. The Jacobian $J(q)$ relates joint velocities to the end-effector twist $\mathcal{V}$:
 
-### Three Ages of SLAM (and a Fourth)
+$$
+\mathcal{V} = J(q)\, \dot{q}
+$$
+
+**Inverse kinematics** runs the map backward, usually as a constrained optimization toward a target pose $T_d$:
+
+$$
+q^{\star} = \arg\min_{q} \; \lVert \log\!\left( T(q)^{-1} T_d \right) \rVert^{2} \quad \text{s.t.} \quad q_{\min} \le q \le q_{\max}
+$$
+
+Almost every method in this repository is a choice of *which mechanism defines* $T(q)$, *how pose and its error are represented*, and *how the inverse or differential problem is solved*.
+
+### Four Ages of Robot Kinematics
 
 | Era | Period | Focus |
 |-----|--------|-------|
-| **Classical Age** | 1986–2004 | Probabilistic formulations: EKF-SLAM, particle filters, maximum likelihood estimation |
-| **Algorithmic-Analysis Age** | 2004–2015 | Observability, convergence, consistency; sparsity and efficient solvers (iSAM, g2o) |
-| **Robust-Perception Age** | 2015–present | Robust performance, high-level understanding, resource awareness, task-driven perception |
-| **Spatial AI Age** | 2020–present | Neural fields, Gaussian Splatting, feed-forward 3D foundation models, open-vocabulary maps |
+| **Mechanism-Theory Age** | 1875–1968 | Linkages and lower pairs, screw theory, Denavit-Hartenberg notation, the Gough-Stewart platform |
+| **Manipulator Age** | 1968–1990 | Closed-form IK for industrial arms, resolved-rate control, Jacobians, manipulability, redundancy resolution |
+| **Geometric & Algorithmic Age** | 1990–2015 | Lie-group formulations, the general 6R solution, parallel-robot singularities, task-priority and QP-based whole-body IK |
+| **Differentiable & Learned Age** | 2015–present | Automatic differentiation, GPU-batched solvers, generative IK, learned kinematic models, large-scale motion retargeting |
 
-The first three ages follow Cadena et al. (2016); the fourth reflects the shift this repository tracks most closely.
+This periodization is a reading aid assembled for this repository, not a standard from the literature; the boundaries overlap.
 
 ---
 
 ## 🧱 Unified Taxonomy
 
-This repository organizes SLAM research through three unified lenses: **Sensors**, **Representations**, and **Pipeline**.
+This repository organizes kinematics research through three unified lenses: **Mechanisms**, **Representations**, and **Problems**.
 
 ---
 
-### 📡 Sensors (What Perceives the World?)
+### ⚙ Mechanisms (What Is Moving?)
 
-Sensors determine WHAT information is available to the system.
+The mechanism determines WHAT the kinematic map looks like.
 
-| Sensor | Measures | Strengths | Weaknesses |
-|--------|----------|-----------|------------|
-| **📷 Monocular Camera** | Bearing (appearance) | Cheap, light, rich texture | Scale ambiguity, sensitive to lighting and blur |
-| **👀 Stereo / RGB-D** | Appearance + depth | Metric scale, dense geometry | Limited range (RGB-D), calibration-sensitive (stereo) |
-| **🧲 IMU** | Acceleration, angular velocity | High rate, observes gravity and scale | Drifts quickly when used alone |
-| **🔦 LiDAR** | Precise range | Accurate, long range, lighting-invariant | Cost, weight, degenerate in tunnels and open fields |
-| **📻 Radar** | Range + Doppler velocity | Works in fog, dust, rain, smoke | Noisy, sparse, multipath |
-| **⚡ Event Camera** | Per-pixel brightness changes | Microsecond latency, high dynamic range | No output when static, unconventional data |
+| Mechanism | Structure | Strengths | Kinematic Difficulty |
+|-----------|-----------|-----------|----------------------|
+| **🦾 Serial Chain** | Links connected end to end (industrial arms, cobots) | Large workspace, simple forward kinematics | Inverse kinematics has multiple or infinitely many solutions |
+| **🕸 Parallel / Closed Chain** | Several legs share one platform (Stewart platform, Delta) | Stiff, fast, precise, high payload-to-weight | Forward kinematics is hard; small workspace; many singularity types |
+| **🚗 Wheeled / Mobile Base** | Wheels rolling on a surface | Unbounded workspace, efficient | Nonholonomic constraints: not every velocity is possible |
+| **🦿 Floating Base** | Tree of limbs on an unactuated base (legged robots, humanoids) | Mobility over rough terrain, whole-body reach | Base is only controlled through contacts; many tasks compete |
+| **🐍 Continuum / Soft** | Continuously bending backbone (tendon robots, concentric tubes) | Compliance, access through narrow paths | Infinite-dimensional shape; kinematics couples with mechanics |
 
-#### 📷 Vision-centric
+#### 🦾 Serial Chains
 
-> 💡 **Why use it?** Cameras are inexpensive, lightweight, and information-dense. They capture the texture needed for place recognition, semantics, and photorealistic maps, which makes them the default choice for AR/VR devices, drones, and consumer robots.
+> 💡 **Why study it?** The serial arm is the reference mechanism of robotics. Its forward kinematics is a simple product of transforms, and almost every concept in the field (Jacobians, singularities, redundancy) was first worked out on it.
 
-#### 🔦 Range-centric
+| Class | Degrees of Freedom | Inverse Kinematics |
+|-------|--------------------|--------------------|
+| **Non-redundant** | Equal to the task dimension (6 for full pose) | Finite number of solutions; up to 16 for a general 6R arm, 8 for most industrial arms |
+| **Redundant** | More than the task needs (7-DOF arms) | Infinitely many solutions forming a self-motion manifold |
+| **Hyper-redundant** | Far more than the task needs (snake arms) | Usually solved through a backbone curve rather than joint by joint |
 
-> 💡 **Why use it?** LiDAR measures geometry directly and is independent of ambient lighting. It gives centimeter-level accuracy at large scale, which is why it dominates autonomous driving, surveying, and field robotics.
+#### 🕸 Parallel and Closed Chains
 
-#### 🧲 Multi-sensor Fusion
+> 💡 **Why study it?** Closing kinematic loops trades workspace for stiffness and speed. That is why flight simulators, pick-and-place Delta robots, and precision positioners are parallel mechanisms, and why their kinematics is the mirror image of the serial case: inverse is easy, forward is hard.
 
-> 💡 **Why use it?** No single sensor works everywhere. Fusing complementary sensors (camera + IMU, LiDAR + IMU, LiDAR + camera + IMU) covers each one's failure modes and is the standard recipe for robust real-world deployment.
+#### 🚗 Wheeled and Mobile Bases
 
-| Coupling | Description | Examples |
-|----------|-------------|----------|
-| **Loosely coupled** | Each sensor produces its own pose estimate; estimates are fused afterward | Early LOAM + IMU, EKF pose fusion |
-| **Tightly coupled** | Raw measurements from all sensors are optimized jointly | VINS-Mono, LIO-SAM, FAST-LIO2, R3LIVE |
+> 💡 **Why study it?** A rolling wheel cannot slide sideways. That single constraint makes mobile robot kinematics a problem about which velocities are allowed rather than which positions are reachable, and it shapes every path a car-like robot can follow.
 
----
+| Model | Constraint | Typical Platform |
+|-------|------------|------------------|
+| **Differential drive / unicycle** | Nonholonomic; can turn in place | Indoor service and research robots |
+| **Bicycle / Ackermann** | Nonholonomic; minimum turning radius | Cars, autonomous vehicles |
+| **Omnidirectional (mecanum, omni-wheel)** | Holonomic in the plane | Warehouse and mobile manipulation bases |
 
-### 🧊 Map Representations (What Is the Map Made Of?)
+#### 🦿 Floating-Base Systems
 
-Representations determine HOW the world is stored.
+> 💡 **Why study it?** Legged robots and humanoids have no joint that fixes them to the world. Their kinematics must account for six unactuated base coordinates and for contact constraints, which turns inverse kinematics into a prioritized multi-task problem.
 
-| Representation | Description | Characteristics |
-|----------------|-------------|-----------------|
-| **📍 Sparse** | 3D landmarks (points, lines, planes) with descriptors | Compact, efficient, accurate poses; not directly usable for planning |
-| **🧱 Dense Geometric** | Point clouds, surfels, occupancy grids, TSDF voxels, meshes | Usable for planning and collision checking; memory-heavy |
-| **🌈 Neural Implicit** | Scene encoded in MLP weights or feature grids (NeRF-style) | Continuous, hole-filling, compact; slow to optimize |
-| **✨ 3D Gaussians** | Explicit anisotropic Gaussians rendered by splatting | Photorealistic, real-time rendering; large memory footprint |
-| **💬 Semantic / Scene Graph** | Objects, rooms, and relations layered on top of geometry | Queryable by language and planners; depends on perception quality |
+#### 🐍 Continuum and Soft Robots
 
-#### 📍 Sparse Maps
-
-> 💡 **Why use it?** Sparse landmark maps keep the estimation problem small and well-conditioned. They give the most accurate trajectories per unit of compute and remain the backbone of production visual SLAM and VIO.
-
-#### 🧱 Dense Geometric Maps
-
-> 💡 **Why use it?** Robots need to know where free space and surfaces are. Dense maps directly support navigation, manipulation, and inspection, and they are simple to fuse incrementally.
-
-| Type | Description | Use Case |
-|------|-------------|----------|
-| **Occupancy Grid / OctoMap** | Probabilistic free/occupied cells | 2D and 3D navigation |
-| **TSDF / ESDF Voxels** | Signed distance to the nearest surface | Meshing, trajectory optimization |
-| **Surfels** | Oriented discs fused over time | Deformable RGB-D and LiDAR mapping |
-| **Point Clouds** | Raw or downsampled points | Large-scale LiDAR mapping, registration |
-
-#### 🌈 Neural Implicit Maps and ✨ 3D Gaussians
-
-> 💡 **Why use it?** Differentiable rendering turns the map itself into something that can be optimized against images. The result is photorealistic novel-view synthesis, plausible completion of unobserved regions, and a natural home for learned features.
-
-#### 💬 Semantic Maps and Scene Graphs
-
-> 💡 **Why use it?** Tasks are specified in terms of objects and places, not voxels. Semantic maps and hierarchical 3D scene graphs let planners and language models ask "where is the mug?" or "which room is the kitchen?".
+> 💡 **Why study it?** A robot without discrete joints has no joint angles to speak of. Continuum kinematics replaces the joint vector with a shape description (arcs, curves, rods), which is the basis of surgical catheters, concentric-tube robots, and soft arms.
 
 ---
 
-### 🔄 Pipeline (How Does SLAM Work?)
+### 🧊 Motion Representations (How Is Motion Described?)
 
-The pipeline describes the operational lifecycle of a SLAM system.
+Representations determine HOW a configuration, pose, or motion is written down.
 
-| Stage | Role | Description | Strategies |
-|-------|------|-------------|------------|
-| **Front-End (Tracking)** | Perceive | Turns raw sensor data into measurements and an initial pose | Feature matching, direct photometric alignment, ICP / scan matching, learned flow |
-| **Back-End (Optimization)** | Infer | Estimates the trajectory and map that best fit all measurements | EKF / MSCKF filtering, sliding-window smoothing, bundle adjustment, pose graph optimization |
-| **Loop Closure** | Recognize | Detects revisited places and corrects accumulated drift | Bag-of-words, global descriptors, geometric verification, robust outlier rejection |
-| **Mapping** | Represent | Fuses observations into the chosen map representation | Keyframe maps, TSDF fusion, neural field or Gaussian optimization |
+| Representation | Describes | Strengths | Weaknesses |
+|----------------|-----------|-----------|------------|
+| **📐 Denavit-Hartenberg Parameters** | Link geometry, four numbers per joint | Compact, standard in industry and datasheets | Several conflicting conventions; ill-conditioned for near-parallel axes |
+| **🌀 Screws / Product of Exponentials** | Link geometry as joint screw axes | No link frames needed, no parameter singularities, clean Jacobians | Less familiar; six numbers per joint |
+| **🧭 Euler Angles** | Orientation, three numbers | Minimal, human-readable | Gimbal lock; twelve conventions |
+| **🔢 Rotation Matrices** | Orientation, nine numbers | Unique, compose by multiplication | Redundant; must stay orthonormal |
+| **🎯 Unit Quaternions** | Orientation, four numbers | Singularity-free, cheap to interpolate | Double cover: $q$ and $-q$ are the same rotation |
+| **🔗 Dual Quaternions** | Full pose, eight numbers | Unified rotation and translation, good for blending | Two constraints to maintain; less tooling |
+| **🧮 Lie Groups SO(3) / SE(3)** | Orientation and pose as manifolds with tangent spaces | Principled errors, derivatives, and uncertainty | Requires manifold-aware optimization |
 
-| Back-End Family | Idea | Trade-off |
-|-----------------|------|-----------|
-| **Filtering** | Marginalize past states, keep a current-state belief | Constant-time and lightweight; linearization errors are locked in |
-| **Smoothing / Factor Graphs** | Optimize over many (or all) past states | More accurate through relinearization; needs sparsity and incremental solvers |
-| **Learned / Differentiable** | Learn the update operator or embed the optimizer in a network | Strong priors and robustness; generalization and compute cost |
+#### 📐 Link-Frame Conventions
+
+> 💡 **Why use it?** Denavit-Hartenberg parameters turn a drawing of a robot into a table of numbers. They are what manufacturers publish and what calibration procedures identify, so every practitioner has to read them.
+
+| Convention | Idea | Note |
+|------------|------|------|
+| **Standard (distal) DH** | Frame attached at the far end of each link | The original 1955 formulation |
+| **Modified (proximal) DH** | Frame attached at the near end of each link | Popularized by Craig's textbook; easier for tree structures |
+| **Hayati modification** | Adds a rotation parameter for near-parallel axes | Removes the discontinuity that breaks calibration |
+| **URDF / SDF / MJCF** | Arbitrary fixed transform plus a joint axis per link | The de facto software formats; not minimal but unambiguous |
+
+#### 🌀 Screw Theory and the Product of Exponentials
+
+> 💡 **Why use it?** Every rigid motion is a rotation about and translation along some axis. Describing each joint by that axis in a single fixed frame removes link-frame bookkeeping and makes the Jacobian fall out directly.
+
+#### 🧮 Rotations, Poses, and Lie Groups
+
+> 💡 **Why use it?** Rotations do not form a vector space, so errors, averages, and derivatives need care. Treating orientation and pose as Lie groups gives a consistent way to define them, which matters for IK convergence, calibration, and learning.
 
 ---
 
-## 🏆 Systems by Task & Strength
+### 🔄 Problems (What Is Being Solved?)
 
-The taxonomy above describes how SLAM systems are *built*. This section classifies them by what they are *for* and what they are *good at*, so you can go from a job to a shortlist. Every system named here has a full entry in the [Paper Collection](#-paper-collection).
+The classic problems share one model and differ in what is known and what is asked.
 
-> ℹ **How to read this.** Strengths reflect what each paper reports and how the system is commonly used in practice. They are not rankings from one unified benchmark, and results shift with sensor quality, calibration, and tuning. Always validate on your own data.
+| Problem | Given | Find | Typical Methods |
+|---------|-------|------|-----------------|
+| **Forward Kinematics (FK)** | Joint configuration | End-effector (or any link) pose | Chained homogeneous transforms, product of exponentials |
+| **Inverse Kinematics (IK)** | Desired end-effector pose | Joint configuration(s) | Closed-form solutions, Jacobian iteration, nonlinear optimization, learned samplers |
+| **Differential Kinematics** | Joint velocities (or desired twist) | End-effector twist (or joint velocities) | Jacobian, pseudoinverse, damped least squares, quadratic programming |
+| **Redundancy Resolution** | A task with spare degrees of freedom | The best of the infinitely many solutions | Null-space projection, task priority, hierarchical QP |
+| **Singularity Analysis** | The mechanism | Configurations where mobility is lost or gained | Jacobian rank, manipulability, geometric classification |
+| **Calibration** | Measured poses and joint readings | The true geometric parameters | Least-squares identification, hand-eye solvers |
+| **Workspace Analysis** | The mechanism and its limits | Reachable and dexterous regions | Sampling, capability maps, interval analysis |
+
+| IK Family | Idea | Trade-off |
+|-----------|------|-----------|
+| **Analytical (closed-form)** | Solve the equations symbolically or geometrically | Microsecond speed and all solutions; only for specific robot structures |
+| **Jacobian-based numerical** | Iterate along the linearized map | General and simple; local, sensitive to singularities and joint limits |
+| **Optimization-based** | Minimize a cost with constraints | Handles limits, collisions, and multiple goals; slower, depends on the seed |
+| **Sampling / evolutionary** | Search the configuration space globally | Escapes local minima; non-deterministic and slower |
+| **Learned** | Train a model to propose solutions | Fast batched and diverse proposals; approximate, needs refinement and retraining per robot |
 
 ---
 
-### 🧭 By Task (What Do You Need From SLAM?)
+## 🏆 Methods by Task & Strength
 
-| Task | Output You Need | Representative Systems | Why These |
+The taxonomy above describes how kinematics methods are *built*. This section classifies them by what they are *for* and what they are *good at*, so you can go from a job to a shortlist. Every method named here has an entry in the [Paper Collection](#-paper-collection) or [Open-Source Frameworks](#-open-source-frameworks).
+
+> ℹ **How to read this.** Strengths reflect what each paper reports and how the method is commonly used in practice. They are not rankings from one unified benchmark, and results shift with the robot, joint limits, seeds, and tolerances. Always validate on your own robot.
+
+---
+
+### 🧭 By Task (What Do You Need From Kinematics?)
+
+| Task | Output You Need | Representative Methods | Why These |
 |------|-----------------|------------------------|-----------|
-| **🎮 Odometry for control** | High-rate, low-latency pose; drift is acceptable | VINS-Mono, OpenVINS, Basalt, DM-VIO, FAST-LIO2, Point-LIO, KISS-ICP, DPVO | Light front-ends with no global optimization in the loop; proven on drones and legged robots |
-| **🗺 Globally consistent SLAM** | Drift-free trajectory with loop closure and a reusable map | ORB-SLAM3, OKVIS2, VINS-Fusion, LIO-SAM, KISS-SLAM, RTAB-Map, Cartographer | Full pipelines: tracking, place recognition, and pose graph or bundle adjustment |
-| **🏠 2D indoor navigation** | Occupancy grid for a wheeled robot | SLAM Toolbox, Cartographer, GMapping, Hector SLAM | Mature, CPU-only, and integrated with ROS navigation stacks |
-| **🧱 Dense geometry for planning** | Occupancy, signed distance field, or mesh | Voxblox, nvblox, OctoMap, RTAB-Map, KinectFusion, PIN-SLAM, SHINE-Mapping | Maps that answer "is this space free?" and "how far is the nearest surface?" |
-| **📸 Photorealistic mapping** | Renderable map for digital twins, AR, simulation | SplaTAM, MonoGS, Photo-SLAM, RTG-SLAM, FAST-LIVO2, R3LIVE, Gaussian-LIC, NICE-SLAM | Differentiable or colorized maps optimized for view synthesis as well as geometry |
-| **📹 Uncalibrated or casual video** | Poses and dense geometry without intrinsics | MASt3R-SLAM, VGGT-SLAM, ViSTA-SLAM, MegaSaM, SLAM3R, CUT3R | Built on feed-forward 3D foundation models that carry their own geometric prior |
-| **💬 Semantic & language-queryable maps** | Objects, rooms, and relations for task planning | Kimera, Hydra, Clio, ConceptGraphs, HOV-SG, ConceptFusion, VLMaps, DualMap | Attach labels or vision-language features to geometry; several build hierarchical scene graphs |
-| **🏃 Dynamic scenes** | Robust poses or explicit object motion when things move | DynaSLAM, DynoSAM, VDO-SLAM, Khronos, WildGS-SLAM, MonST3R, Pi3MOS-SLAM, ERASOR | Either mask out dynamics, or estimate object motion jointly with the camera |
-| **🤝 Multi-robot mapping** | One shared map across a team | Kimera-Multi, Swarm-SLAM, DOOR-SLAM, COVINS, DCL-SLAM, D²SLAM, maplab 2.0 | Inter-robot loop closure, outlier rejection, and communication-aware optimization |
-| **📍 Relocalization & map reuse** | Localize again in a previously built map | ORB-SLAM3, maplab, HF-Net (hloc), DBoW2, AnyLoc, Scan Context, STD | Place recognition plus geometric verification; multi-session map management |
-| **💾 Long-term operation & memory** | A map that stays bounded, current, and queryable over weeks | RTAB-Map, LT-mapper, ELite, Khronos, DynaMem, ReMEmbR, 3D-Mem, Embodied-RAG | Explicit memory management, change handling, and retrieval; see [SLAM with Memory](#-slam-with-memory) |
-| **🌫 Degraded sensing** | Estimation in dark, fog, dust, smoke, or at very high speed | Super Odometry, LVI-SAM, LOCUS 2.0, RadarSLAM, CFEAR Radarodometry, Ultimate SLAM, DEVO | Redundant sensors or modalities (radar, events) that survive when cameras and LiDAR fail |
+| **🏭 Fast IK for a standard 6-DOF arm** | Every joint solution in microseconds | IKFast, EAIK, IK-Geo, Pieper-style closed forms | Closed-form solvers return all branches deterministically, which planners need |
+| **🦾 IK for a 7-DOF redundant arm** | One good solution, or the whole self-motion | Shimizu et al. (S-R-S arms), Franka analytical IK, TRAC-IK, cuRobo | Analytical solvers parameterize redundancy by an arm angle; numerical solvers handle arbitrary limits |
+| **🔧 General-purpose IK for any URDF** | A reliable solution with joint limits respected | TRAC-IK, KDL, pick_ik, BioIK, Levenberg-Marquardt (Sugihara) | Need only a robot description; mature MoveIt and ROS integration |
+| **🎮 Real-time teleoperation and servoing** | Smooth joint motion tracking a moving target | RelaxedIK, RangedIK, CollisionIK, NEO, damped least squares | Trade exact pose matching for continuity, singularity avoidance, and collision clearance |
+| **🧍 Whole-body IK for humanoids and legged robots** | Joint motion satisfying many tasks at once | Hierarchical QP, Stack of Tasks, Pink, mink, PlaCo, TSID | Weighted or strictly prioritized tasks with contact, balance, and limit constraints |
+| **🚀 Many IK queries for planning** | Thousands of collision-free solutions in parallel | cuRobo, PyRoki, IKFlow, pytorch_kinematics | Batched on GPU; learned samplers provide diverse seeds |
+| **🕺 Motion retargeting** | Robot motion matching a human or animated source | GMR, dex-retargeting (AnyTeleop), DexPilot, Skeleton-Aware Networks | Map between different skeletons while respecting the target's limits |
+| **🕸 Parallel robot kinematics** | Platform pose from leg lengths, and singularity maps | Husty's algorithm, Gosselin-Angeles classification, Merlet's interval methods | Forward kinematics has up to 40 solutions; singularities must be mapped in advance |
+| **🚗 Mobile base motion** | Feasible paths and velocity commands | Unicycle and bicycle models, Dubins and Reeds-Shepp curves, pure pursuit | Encode nonholonomic constraints directly in the model |
+| **🐍 Continuum robot shape** | Backbone shape from actuator inputs | Piecewise constant curvature, Cosserat rod models, modal approaches | Reduce an infinite-dimensional shape to a few parameters |
+| **🎯 Making the model match the robot** | Corrected geometric parameters and sensor mounting | POE-based calibration, Hayati parameters, Tsai-Lenz, Park-Martin, DREAM | Identify link parameters and hand-eye transforms from measurements |
+| **🌐 Robot placement and design** | Where the robot can reach, and how well | Capability maps, Reuleaux, manipulability and conditioning indices | Precompute reachability and dexterity over the workspace |
 
 ---
 
-### 💪 By Strength (What Is Each System Best At?)
+### 💪 By Strength (What Is Each Method Best At?)
 
-| Strength | Systems That Stand Out | Typical Trade-off |
+| Strength | Methods That Stand Out | Typical Trade-off |
 |----------|------------------------|-------------------|
-| **🎯 Trajectory accuracy** | ORB-SLAM3, DM-VIO, OKVIS2, DROID-SLAM, FAST-LIO2, CT-ICP | Needs good calibration and, for learned methods, a GPU |
-| **⚡ Speed & low compute** | SVO, OpenVINS, S-MSCKF, KISS-ICP, FAST-LIO2, Faster-LIO, XFeat | Sparse or point-cloud maps; little or no global optimization |
-| **🧩 Works out of the box** | KISS-ICP, KISS-SLAM, MAD-ICP, GenZ-ICP, RKO-LIO | Gives up some per-sensor tuning headroom for generality |
-| **🌀 Aggressive motion** | Point-LIO, FAST-LIO2, DLIO, VINS-Mono, Ultimate SLAM | Relies on a well-synchronized IMU or an event camera |
-| **🧊 Low-texture or repetitive scenes** | DSO, LSD-SLAM, PL-SLAM, AirSLAM, LiDAR-based systems | Direct methods are sensitive to exposure changes and rolling shutter |
-| **🚧 Geometric degeneracy (corridors, tunnels, open fields)** | GenZ-ICP, LVI-SAM, Super Odometry, FAST-LIVO2, BIEVR-LIO | Extra sensors and more complex calibration |
-| **💡 Lighting & appearance change** | AirSLAM, DXSLAM, SuperPoint + LightGlue pipelines, AnyLoc, LiDAR-based systems | Learned features add GPU cost |
-| **🌍 Large scale & long-term operation** | RTAB-Map, Cartographer, maplab, LIO-SAM, VGGT-Long, VINGS-Mono | Memory management and loop closure become the bottleneck |
-| **🖼 Rendering quality** | SplaTAM, MonoGS, Photo-SLAM, Splat-SLAM, HI-SLAM2 | GPU required; map size grows quickly |
-| **🕳 Completeness (filling unobserved regions)** | iMAP, NICE-SLAM, Co-SLAM, ESLAM | Slow optimization; hard to correct after loop closure |
-| **🛡 Outlier robustness** | Graduated Non-Convexity, TEASER++, KISS-Matcher, DOOR-SLAM, Kimera-Multi | More computation in the back-end |
-| **🎲 Zero-shot generalization** | DROID-SLAM, DPVO, TartanVO, MASt3R-SLAM, VGGT-SLAM | GPU memory; metric scale not always available |
-| **🔧 No calibration needed** | MASt3R-SLAM, VGGT-SLAM, ViSTA-SLAM, MegaSaM, CalfVO | Lower precision than a well-calibrated classical pipeline |
-| **🧠 Scene understanding** | Hydra, Clio, ConceptGraphs, HOV-SG, Khronos | Depends on upstream segmentation and vision-language models |
-| **📜 Certifiable correctness** | SE-Sync, TEASER++, DPGO | Applies to specific problem classes (pose graphs, registration) |
+| **⚡ Raw speed** | IKFast, EAIK, IK-Geo | Only for arms whose structure admits a closed form |
+| **📋 Returns all solutions** | IKFast, EAIK, IK-Geo, Raghavan-Roth, Husty-Pfurner | Redundant arms need a free parameter to be discretized |
+| **🧩 Works on any robot description** | TRAC-IK, KDL, pick_ik, BioIK, Pink, mink | Local; quality depends on the initial guess |
+| **🚧 Respects joint limits** | TRAC-IK, SNS (saturation in the null space), QP-based IK, cuRobo | More computation per iteration than a plain pseudoinverse |
+| **🌀 Robust near singularities** | Damped least squares, selectively damped least squares, Levenberg-Marquardt, RelaxedIK | Accepts a small tracking error in exchange for bounded joint velocities |
+| **🎚 Many simultaneous objectives** | BioIK, RelaxedIK, RangedIK, hierarchical QP, PyRoki | Weights or priorities need tuning |
+| **📶 Strict task priorities** | Nakamura task priority, Siciliano-Slotine, Kanoun et al., hierarchical QP | Algorithmic singularities between conflicting tasks |
+| **🧱 Collision-aware solutions** | cuRobo, CollisionIK, NEO, Drake InverseKinematics | Needs geometry models and is more expensive |
+| **🌍 Global search / certificates** | Global IK via mixed-integer convex optimization, distance-geometric IK, BioIK | Much slower than local methods |
+| **🚀 Large batches** | cuRobo, PyRoki, pytorch_kinematics, IKFlow | Requires a GPU for the full benefit |
+| **🎲 Diverse solutions for redundant arms** | IKFlow, generative graphical IK, invertible neural networks | Approximate; usually polished with a numerical step |
+| **📐 Calibration-friendly models** | Product of exponentials, Hayati parameters, complete and parametrically continuous (CPC) model | More parameters than the minimal DH set |
+| **🧠 No analytic model needed** | Neural Jacobian Fields, visual self-modeling, locally weighted learning | Accuracy below a calibrated analytic model |
 
 ---
 
-### 🪪 System Profiles at a Glance
+### 🪪 Solver Profiles at a Glance
 
-A side-by-side view of widely used systems, one per design family.
+A side-by-side view of widely used inverse kinematics solvers, one per design family.
 
-| System | Sensors | Primary Task | Map | Loop Closure | Compute | Standout Strength |
-|--------|---------|--------------|-----|--------------|---------|-------------------|
-| **ORB-SLAM3** | Mono / stereo / RGB-D, optional IMU | Full SLAM | Sparse landmarks | ✅ | CPU | Accuracy and multi-session map reuse |
-| **VINS-Fusion** | Mono / stereo + IMU, optional GPS | VIO + global fusion | Sparse landmarks | ✅ | CPU | Robust initialization, GPS fusion |
-| **OpenVINS** | Mono / stereo + IMU | Odometry | Sparse (sliding window) | ➖ | CPU | Lightweight, consistent filter |
-| **DROID-SLAM** | Mono / stereo / RGB-D | Dense learned SLAM | Per-keyframe dense depth | Global BA | GPU | Robustness across datasets |
-| **DPVO** | Mono | Learned odometry | Sparse patches | ➖ (DPV-SLAM adds it) | GPU | DROID-level accuracy at lower cost |
-| **KISS-ICP** | LiDAR | Odometry | Voxelized points | ➖ (KISS-SLAM adds it) | CPU | Near-zero tuning |
-| **FAST-LIO2** | LiDAR + IMU | Odometry | Point cloud (ikd-Tree) | ➖ | CPU | Speed and fast-motion robustness |
-| **LIO-SAM** | LiDAR + IMU, optional GPS | Full SLAM | Point cloud keyframes | ✅ | CPU | Extensible factor graph |
-| **FAST-LIVO2** | LiDAR + IMU + camera | Odometry + colored mapping | Unified voxel map | ➖ | CPU | Dense colored maps onboard |
-| **Cartographer** | 2D / 3D LiDAR, optional IMU | Full SLAM | Submap grids | ✅ | CPU | Real-time loop closure indoors |
-| **RTAB-Map** | RGB-D / stereo / LiDAR | Full SLAM | Occupancy grid, point cloud | ✅ | CPU | Long-term, multi-session operation |
-| **Hydra** | Stereo / RGB-D + IMU | Metric-semantic SLAM | Mesh + 3D scene graph | ✅ | CPU + GPU for segmentation | Hierarchical scene understanding |
-| **NICE-SLAM** | RGB-D | Dense neural SLAM | Feature grids + decoders | ➖ | GPU | Hole-filling, continuous geometry |
-| **SplaTAM** | RGB-D | Dense Gaussian SLAM | 3D Gaussians | ➖ | GPU | Rendering quality |
-| **Photo-SLAM** | Mono / stereo / RGB-D | Photorealistic SLAM | Hyper primitives (ORB + Gaussians) | ✅ | GPU, incl. embedded | Real-time photorealistic mapping |
-| **MASt3R-SLAM** | Mono, uncalibrated | Dense feed-forward SLAM | Fused pointmaps | ✅ | GPU | Works without camera intrinsics |
-| **VGGT-SLAM** | Mono, uncalibrated | Dense feed-forward SLAM | Aligned submaps | ✅ | GPU | Handles projective ambiguity |
-| **ConceptGraphs** | Posed RGB-D | Open-vocabulary mapping | Object-level 3D scene graph | n/a (uses external poses) | GPU | Language-queryable objects and relations |
-| **Swarm-SLAM** | LiDAR / stereo / RGB-D, multi-robot | Collaborative SLAM | Per-robot pose graphs | ✅ inter-robot | CPU | Decentralized, sparse communication |
+| Solver | Family | Robots | Returns | Joint Limits | Compute | Standout Strength |
+|--------|--------|--------|---------|--------------|---------|-------------------|
+| **IKFast** | Analytical (generated code) | Arms with solvable structure, up to 6 solved joints | All solutions | Filtered afterward | CPU | Microsecond closed-form IK from a robot description |
+| **EAIK** | Analytical (subproblem decomposition) | 6R arms with decomposable geometry | All solutions | Filtered afterward | CPU | Automatic derivation with numerically stable subproblems |
+| **KDL** | Jacobian pseudoinverse iteration | Any serial chain | One solution | Clamping | CPU | Simple, ubiquitous ROS baseline |
+| **TRAC-IK** | Newton iteration with restarts, run alongside SQP | Any serial chain | One solution | ✅ | CPU | Higher success rate than KDL under joint limits |
+| **BioIK** | Memetic evolutionary optimization | Any tree, multiple end-effectors | One solution | ✅ | CPU | Arbitrary combinable goals, global search |
+| **RelaxedIK** | Weighted nonlinear optimization | Serial arms | One solution per time step | ✅ | CPU | Smooth, feasible motion for real-time tracking |
+| **pick_ik** | Gradient descent plus memetic global search | Any MoveIt robot | One solution | ✅ | CPU | Modern MoveIt 2 plugin with custom cost functions |
+| **Pink** | Differential IK as a weighted QP | Any Pinocchio model, floating base | Joint velocities | ✅ | CPU | Whole-body task formulation for humanoids |
+| **mink** | Differential IK as a weighted QP | Any MuJoCo model, floating base | Joint velocities | ✅ | CPU | Same idea natively on MuJoCo, with collision avoidance |
+| **Hierarchical QP** | Cascade of quadratic programs | Humanoids, redundant systems | Joint velocities or accelerations | ✅ | CPU | Strict priorities with inequality constraints |
+| **Drake Global IK** | Mixed-integer convex optimization | Arms and trees | One solution or an infeasibility certificate | ✅ | CPU, MIP solver | Can prove that no solution exists |
+| **cuRobo** | Batched parallel optimization | Arms, with world collision | Many solutions | ✅ | GPU | Collision-free IK at very high throughput |
+| **PyRoki** | Modular nonlinear least squares in JAX | Any URDF | One or batched solutions | ✅ | CPU / GPU | One toolkit for IK, retargeting, and trajectory optimization |
+| **IKFlow** | Conditional normalizing flow | Arms, trained per robot | Many diverse solutions | Learned from data | GPU | Samples the solution set of redundant arms |
 
-✅ built in · ➖ not included (pair with a loop-closure module from [Place Recognition & Loop Closure](#-place-recognition--loop-closure))
+✅ handled inside the solver · "Filtered afterward" means the solver enumerates branches and out-of-limit ones are discarded
 
 ---
 
 ## 📚 Paper Collection
 
-### 📷 Visual SLAM
+### 📐 Kinematic Modeling & Conventions
 
-> **Visual SLAM** estimates camera motion and scene structure from images alone. It answers "where am I?" using the cheapest and most information-rich sensor available, and it is the lineage from which most modern SLAM ideas (keyframes, bundle adjustment, bag-of-words loop closure) emerged.
-
-#### 📍 **Feature-based Visual SLAM**
-
-> **Feature-based (indirect) methods** extract and match sparse keypoints, then minimize *reprojection error*. They are robust to photometric changes and large baselines, and remain the reference for trajectory accuracy.
+> **Kinematic modeling** is the step that turns a physical mechanism into equations. The choice of convention decides how many parameters a robot has, whether they are identifiable, and how easily the Jacobian can be written down.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| MonoSLAM | 2007 | First real-time single-camera SLAM, maintaining a sparse landmark map with an EKF and active feature search at 30 Hz. | [[TPAMI]](https://doi.org/10.1109/TPAMI.2007.1049) |
-| PTAM | 2007 | Splits tracking and mapping into parallel threads and introduces keyframe-based bundle adjustment, the template for most later visual SLAM systems. | [[ISMAR]](https://doi.org/10.1109/ISMAR.2007.4538852) |
-| ORB-SLAM | 2015 | Complete monocular SLAM using ORB features for tracking, mapping, relocalization, and loop closing, with a covisibility graph and essential graph for scalability. | [[arXiv]](https://arxiv.org/abs/1502.00956) [[GitHub]](https://github.com/raulmur/ORB_SLAM) |
-| ORB-SLAM2 | 2017 | Extends ORB-SLAM to stereo and RGB-D cameras with metric scale, map reuse, and a lightweight localization mode. | [[arXiv]](https://arxiv.org/abs/1610.06475) [[GitHub]](https://github.com/raulmur/ORB_SLAM2) |
-| ORB-SLAM3 | 2021 | Adds tightly coupled visual-inertial SLAM based on MAP estimation and a multi-map (Atlas) system, supporting pinhole and fisheye cameras. | [[arXiv]](https://arxiv.org/abs/2007.11898) [[GitHub]](https://github.com/UZ-SLAMLab/ORB_SLAM3) |
-| PL-SLAM | 2017 | Stereo SLAM that combines point and line segment features to stay robust in low-texture, man-made environments. | [[arXiv]](https://arxiv.org/abs/1705.09479) [[GitHub]](https://github.com/rubengooj/pl-slam) |
-| UcoSLAM | 2019 | Fuses natural keypoints with fiducial squared markers so that scale and long-term relocalization come for free when markers are present. | [[arXiv]](https://arxiv.org/abs/1902.03729) |
-| OpenVSLAM | 2019 | Modular, well-engineered indirect visual SLAM framework supporting perspective, fisheye, and equirectangular cameras. | [[arXiv]](https://arxiv.org/abs/1910.01122) [[GitHub]](https://github.com/stella-cv/stella_vslam) |
-| GCNv2 | 2019 | Learns binary keypoint descriptors with a CNN designed as a drop-in replacement for ORB inside ORB-SLAM2, running in real time on embedded GPUs. | [[arXiv]](https://arxiv.org/abs/1902.11046) [[GitHub]](https://github.com/jiexiong2016/GCNv2_SLAM) |
-| DXSLAM | 2020 | Replaces hand-crafted features with deep local and global CNN features for more robust tracking, relocalization, and loop closure. | [[arXiv]](https://arxiv.org/abs/2008.05416) [[GitHub]](https://github.com/ivipsourcecode/dxslam) |
-| OV²SLAM | 2021 | Fully online, versatile visual SLAM with optical-flow tracking and an online bag-of-words for loop closure, built for real-time robotics use. | [[arXiv]](https://arxiv.org/abs/2102.04060) [[GitHub]](https://github.com/ov2slam/ov2slam) |
-| AirSLAM | 2024 | Point-line visual SLAM built on learned features and a unified point-line extraction network, designed for illumination robustness and embedded deployment. | [[arXiv]](https://arxiv.org/abs/2408.03520) [[GitHub]](https://github.com/sair-lab/AirSLAM) |
-
-#### 🎞 **Direct & Semi-Direct Visual SLAM**
-
-> **Direct methods** skip feature extraction and minimize *photometric error* on raw pixel intensities. They use more of the image, work in low-texture scenes, and produce semi-dense or dense reconstructions.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| DTAM | 2011 | Dense tracking and mapping in real time: builds per-pixel depth maps from a cost volume and tracks by whole-image alignment against the dense model. | [[ICCV]](https://doi.org/10.1109/ICCV.2011.6126513) |
-| LSD-SLAM | 2014 | Large-scale direct monocular SLAM with semi-dense depth maps and Sim(3) pose graph optimization to handle scale drift. | [[ECCV]](https://doi.org/10.1007/978-3-319-10605-2_54) [[GitHub]](https://github.com/tum-vision/lsd_slam) |
-| SVO | 2014 | Semi-direct visual odometry that tracks by sparse image alignment and maps with depth filters, running at hundreds of frames per second on MAVs. | [[ICRA]](https://doi.org/10.1109/ICRA.2014.6906584) [[GitHub]](https://github.com/uzh-rpg/rpg_svo) |
-| DSO | 2016 | Direct sparse odometry with joint optimization of poses, inverse depths, and affine brightness, plus full photometric calibration. | [[arXiv]](https://arxiv.org/abs/1607.02565) [[GitHub]](https://github.com/JakobEngel/dso) |
-| Stereo DSO | 2017 | Brings static stereo into DSO's windowed bundle adjustment for metric scale and better large-scale accuracy. | [[arXiv]](https://arxiv.org/abs/1708.07878) |
-| LDSO | 2018 | Adds loop closure to DSO by favoring repeatable corner features and running Sim(3) pose graph optimization. | [[arXiv]](https://arxiv.org/abs/1808.01111) [[GitHub]](https://github.com/tum-vision/LDSO) |
-| DSM | 2019 | Direct sparse mapping: a fully direct monocular SLAM that reuses map points through a persistent covisibility-based map. | [[arXiv]](https://arxiv.org/abs/1904.06577) [[GitHub]](https://github.com/jzubizarreta/dsm) |
-
-#### 🧱 **Dense RGB-D SLAM & Volumetric Mapping**
-
-> **Dense RGB-D SLAM** fuses depth images into a single surface model (TSDF volume or surfels) and tracks the camera against it. These systems introduced real-time dense reconstruction and remain the geometric baseline for neural methods.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| KinectFusion | 2011 | Real-time dense surface mapping and tracking by fusing depth frames into a TSDF volume and aligning with frame-to-model ICP on a GPU. | [[ISMAR]](https://doi.org/10.1109/ISMAR.2011.6092378) |
-| OctoMap | 2013 | Probabilistic 3D occupancy mapping in an octree, modelling free, occupied, and unknown space with multi-resolution queries. | [[AURO]](https://doi.org/10.1007/s10514-012-9321-0) [[GitHub]](https://github.com/OctoMap/octomap) |
-| DVO-SLAM | 2013 | Dense visual odometry combining photometric and depth error with keyframe-based pose graph SLAM for RGB-D cameras. | [[GitHub]](https://github.com/tum-vision/dvo_slam) |
-| ElasticFusion | 2015 | Surfel-based dense RGB-D SLAM that stays globally consistent through non-rigid map deformation instead of a pose graph. | [[RSS]](https://doi.org/10.15607/RSS.2015.XI.001) [[GitHub]](https://github.com/mp3guy/ElasticFusion) |
-| InfiniTAM v3 | 2017 | Efficient large-scale volumetric fusion framework with voxel hashing, submaps, loop closure, and relocalization. | [[arXiv]](https://arxiv.org/abs/1708.00783) [[GitHub]](https://github.com/victorprad/InfiniTAM) |
-| BundleFusion | 2017 | Globally consistent real-time 3D reconstruction with hierarchical bundle adjustment and on-the-fly surface re-integration. | [[arXiv]](https://arxiv.org/abs/1604.01093) [[GitHub]](https://github.com/niessner/BundleFusion) |
-| Voxblox | 2017 | Incrementally builds Euclidean signed distance fields from TSDFs on a CPU for online MAV planning. | [[arXiv]](https://arxiv.org/abs/1611.03631) [[GitHub]](https://github.com/ethz-asl/voxblox) |
-| BAD SLAM | 2019 | Real-time direct bundle adjustment for RGB-D SLAM that jointly optimizes surfels and camera poses, released with the ETH3D SLAM benchmark. | [[GitHub]](https://github.com/ETH3D/badslam) |
-| RTAB-Map | 2019 | Long-term, large-scale graph SLAM library for RGB-D, stereo, and LiDAR with appearance-based loop closure and memory management. | [[JFR]](https://doi.org/10.1002/rob.21831) [[GitHub]](https://github.com/introlab/rtabmap) |
-| nvblox | 2023 | GPU-accelerated incremental signed distance field mapping aimed at real-time navigation on embedded platforms. | [[arXiv]](https://arxiv.org/abs/2311.00626) [[GitHub]](https://github.com/nvidia-isaac/nvblox) |
+| Denavit-Hartenberg Notation | 1955 | Introduces the four-parameter matrix notation for lower-pair mechanisms that became the standard way to describe serial robot geometry. | [[JAM]](https://doi.org/10.1115/1.4011045) |
+| Pieper's Thesis | 1968 | Shows that a 6-DOF arm with three consecutive intersecting axes has a closed-form inverse kinematic solution, the design rule behind most industrial arms. | [[Thesis]](https://apps.dtic.mil/sti/citations/AD0680036) |
+| Product of Exponentials | 1984 | Writes forward kinematics as a product of matrix exponentials of joint twists, removing the need for link frames. | [[Springer]](https://doi.org/10.1007/BFb0031048) |
+| Khalil-Kleinfinger Notation | 1986 | A modified geometric notation that handles open, tree-structured, and closed-loop robots with one consistent set of parameters. | [[ICRA]](https://doi.org/10.1109/ROBOT.1986.1087552) |
+| Computational Aspects of the POE Formula | 1994 | Analyzes the product-of-exponentials formula for efficient forward kinematics and Jacobian computation and compares it with Denavit-Hartenberg models. | [[TAC]](https://doi.org/10.1109/9.280779) |
+| A Mathematical Introduction to Robotic Manipulation | 1994 | The textbook that established screw theory and Lie groups as the working language of manipulator kinematics. | [[Book]](https://www.cds.caltech.edu/~murray/mlswiki/index.php/Main_Page) |
+| Modern Robotics | 2017 | Textbook and software library that teach kinematics entirely through screws and the product of exponentials. | [[Website]](http://modernrobotics.org) [[GitHub]](https://github.com/NxRLab/ModernRobotics) |
 
 ---
 
-### 🧲 Visual-Inertial Odometry & SLAM
+### 🔄 Rotation & Pose Representations
 
-> **Visual-inertial** systems fuse cameras with an IMU. The IMU makes scale and gravity observable and bridges fast motion or texture-less frames; the camera bounds the IMU's drift. This pairing is the default state estimator for drones, phones, and AR/VR headsets.
+> **Rotation and pose representations** decide how orientation errors are measured, interpolated, and differentiated. A poor choice produces gimbal lock in a controller, discontinuities in a learned model, or a wrong gradient in an optimizer.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| MSCKF | 2007 | Multi-state constraint Kalman filter that uses feature tracks as constraints across a sliding window of camera poses without keeping landmarks in the state. | [[ICRA]](https://doi.org/10.1109/ROBOT.2007.364024) |
-| OKVIS | 2015 | Keyframe-based visual-inertial odometry using sliding-window nonlinear optimization with marginalization. | [[IJRR]](https://doi.org/10.1177/0278364914554813) [[GitHub]](https://github.com/ethz-asl/okvis) |
-| ROVIO | 2015 | Robust direct EKF-based visual-inertial odometry that uses photometric patch errors as the filter innovation. | [[IROS]](https://doi.org/10.1109/IROS.2015.7353389) [[GitHub]](https://github.com/ethz-asl/rovio) |
-| On-Manifold Preintegration | 2016 | Derives IMU preintegration on the SO(3) manifold with analytic Jacobians and bias correction, enabling efficient real-time visual-inertial smoothing. | [[arXiv]](https://arxiv.org/abs/1512.02363) |
-| VI-ORB-SLAM | 2017 | Visual-inertial monocular SLAM with map reuse and a dedicated IMU initialization procedure, a precursor of ORB-SLAM3. | [[arXiv]](https://arxiv.org/abs/1610.05949) |
-| VINS-Mono | 2018 | Robust monocular visual-inertial state estimator with online initialization, relocalization, loop closure, and 4-DoF pose graph optimization. | [[arXiv]](https://arxiv.org/abs/1708.03852) [[GitHub]](https://github.com/HKUST-Aerial-Robotics/VINS-Mono) |
-| S-MSCKF | 2018 | Stereo MSCKF for fast autonomous flight, showing filter-based VIO that is accurate and light enough for aggressive MAV maneuvers. | [[arXiv]](https://arxiv.org/abs/1712.00036) [[GitHub]](https://github.com/KumarRobotics/msckf_vio) |
-| VI-DSO | 2018 | Direct sparse visual-inertial odometry with dynamic marginalization, jointly optimizing photometric and inertial energy. | [[arXiv]](https://arxiv.org/abs/1804.05625) |
-| R-VIO | 2018 | Robocentric visual-inertial odometry that formulates the filter in a moving local frame to improve consistency. | [[arXiv]](https://arxiv.org/abs/1805.04031) [[GitHub]](https://github.com/rpng/R-VIO) |
-| VINS-Fusion | 2019 | General optimization-based framework for fusing local sensors (mono/stereo cameras, IMU) with global sensors such as GPS. | [[arXiv]](https://arxiv.org/abs/1901.03638) [[GitHub]](https://github.com/HKUST-Aerial-Robotics/VINS-Fusion) |
-| Kimera | 2020 | Open-source library for real-time metric-semantic SLAM: VIO, robust pose graph optimization, meshing, and 3D semantic reconstruction. | [[arXiv]](https://arxiv.org/abs/1910.02490) [[GitHub]](https://github.com/MIT-SPARK/Kimera) |
-| Basalt | 2020 | Visual-inertial mapping with nonlinear factor recovery, compressing VIO information into factors usable in global bundle adjustment. | [[arXiv]](https://arxiv.org/abs/1904.06504) [[GitLab]](https://gitlab.com/VladyslavUsenko/basalt) |
-| OpenVINS | 2020 | Research platform for filter-based visual-inertial estimation with an on-manifold sliding-window EKF, online calibration, and extensive documentation. | [[ICRA]](https://doi.org/10.1109/ICRA40945.2020.9196524) [[GitHub]](https://github.com/rpng/open_vins) |
-| TLIO | 2020 | Tight learned inertial odometry: a network regresses displacement and uncertainty from IMU alone, fused in an EKF for pedestrian tracking. | [[arXiv]](https://arxiv.org/abs/2007.01867) |
-| DM-VIO | 2022 | Delayed marginalization keeps a second factor graph alive so the visual prior can be relinearized after IMU initialization, yielding highly accurate monocular VIO. | [[arXiv]](https://arxiv.org/abs/2201.04114) [[GitHub]](https://github.com/lukasvst/dm-vio) |
-| OKVIS2 | 2022 | Extends OKVIS to full visual-inertial SLAM with pose-graph edges from marginalized observations and loop closure in real time. | [[arXiv]](https://arxiv.org/abs/2202.09199) [[GitHub]](https://github.com/smartroboticslab/okvis2) |
-| DBA-Fusion | 2024 | Tightly integrates DROID-style dense bundle adjustment with IMU and GNSS in a factor graph for large-scale localization and dense mapping. | [[arXiv]](https://arxiv.org/abs/2403.13714) [[GitHub]](https://github.com/GREAT-WHU/DBA-Fusion) |
-| cuVSLAM | 2025 | CUDA-accelerated visual odometry and SLAM supporting 1 to 32 cameras with an optional IMU, running in real time on Jetson edge devices. | [[arXiv]](https://arxiv.org/abs/2506.04359) [[GitHub]](https://github.com/nvidia-isaac/cuVSLAM) |
-| OKVIS2-X | 2025 | Multi-sensor SLAM fusing visual, inertial, depth or LiDAR, and GNSS measurements while building dense volumetric occupancy submaps in real time. | [[arXiv]](https://arxiv.org/abs/2510.04612) |
-| FF-VIO-Init | 2026 | Feature-free monocular VIO initialization using point clouds from a feed-forward 3D model, reducing the problem to scale, velocity, and gravity estimation. | [[arXiv]](https://arxiv.org/abs/2605.17327) [[GitHub]](https://github.com/Yuantai-Z/FF-VIO-Init) |
+| A Survey of Attitude Representations | 1993 | Reference survey of rotation parameterizations (matrices, Euler angles, quaternions, Rodrigues parameters) and the relations between them. | [[JAS]](https://ui.adsabs.harvard.edu/abs/1993JAnSc..41..439S) |
+| Practical Parameterization of Rotations Using the Exponential Map | 1998 | Shows how to use the three-parameter exponential map robustly for inverse kinematics and optimization, including derivative computation near its singularities. | [[JGT]](https://doi.org/10.1080/10867651.1998.10487493) |
+| Hand-Eye Calibration Using Dual Quaternions | 1999 | Uses dual quaternions to solve rotation and translation simultaneously, a widely cited demonstration of the representation's value. | [[IJRR]](https://doi.org/10.1177/02783649922066213) |
+| Quaternion Kinematics for the Error-State Kalman Filter | 2017 | Self-contained reference on quaternion conventions, perturbations, derivatives, and integration. | [[arXiv]](https://arxiv.org/abs/1711.02508) |
+| A Micro Lie Theory for State Estimation in Robotics | 2018 | Compact tutorial on the Lie group operations and Jacobians needed in practice for SO(3) and SE(3). | [[arXiv]](https://arxiv.org/abs/1812.01537) [[GitHub]](https://github.com/artivis/manif) |
+| On the Continuity of Rotation Representations in Neural Networks | 2019 | Proves that rotation representations with four or fewer dimensions are discontinuous for learning and proposes continuous 5D and 6D alternatives. | [[arXiv]](https://arxiv.org/abs/1812.07035) |
+| An Analysis of SVD for Deep Rotation Estimation | 2020 | Shows that projecting a 9D network output onto SO(3) with the singular value decomposition is a simple and strong rotation head. | [[arXiv]](https://arxiv.org/abs/2006.14616) |
+| Deep Regression on Manifolds: A 3D Rotation Case Study | 2021 | Studies differentiable mappings onto rotation manifolds for regression and releases the RoMa rotation library. | [[arXiv]](https://arxiv.org/abs/2103.16317) [[GitHub]](https://github.com/naver/roma) |
+| Learning with 3D Rotations: A Hitchhiker's Guide to SO(3) | 2024 | Practical guide to which rotation representation to choose for a learning problem depending on whether rotations are inputs or outputs. | [[arXiv]](https://arxiv.org/abs/2404.11735) |
 
 ---
 
-### 🔦 LiDAR SLAM
+### 🧮 Analytical Inverse Kinematics
 
-> **LiDAR SLAM** registers range scans to estimate motion and build geometrically precise maps. It is insensitive to lighting, scales to kilometers, and is the workhorse of autonomous driving, surveying, and subterranean exploration.
+> **Analytical IK** solves the kinematic equations in closed form. When it exists it is the fastest and most complete option: it returns every solution branch in microseconds, with no initial guess and no convergence failures.
 
-#### 🗺 **2D LiDAR & Classical SLAM**
+#### 📜 **Classical Closed-Form & General 6R Solutions**
 
-> **2D laser SLAM** powers most indoor mobile robots. These methods established occupancy grids, particle filters, and graph-based scan matching as standard tools.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| FastSLAM | 2002 | Factors the SLAM posterior into a particle filter over trajectories and independent per-landmark EKFs, scaling to very large landmark maps. | [[AAAI]](https://aaai.org/papers/00593-aaai02-089-fastslam-a-factored-solution-to-the-simultaneous-localization-and-mapping-problem/) |
-| GMapping | 2007 | Rao-Blackwellized particle filter grid mapping with improved proposal distributions and adaptive resampling. | [[T-RO]](https://doi.org/10.1109/TRO.2006.889486) |
-| Hector SLAM | 2011 | Fast 2D scan matching on multi-resolution occupancy grids without odometry, designed for search-and-rescue robots. | [[SSRR]](https://doi.org/10.1109/SSRR.2011.6106777) [[GitHub]](https://github.com/tu-darmstadt-ros-pkg/hector_slam) |
-| Cartographer | 2016 | Real-time loop closure in 2D LiDAR SLAM using submaps and a branch-and-bound scan matcher, later extended to 3D. | [[ICRA]](https://doi.org/10.1109/ICRA.2016.7487258) [[GitHub]](https://github.com/cartographer-project/cartographer) |
-| SLAM Toolbox | 2021 | Production-grade 2D SLAM for ROS 2 with lifelong mapping, map serialization, and localization modes; the default SLAM in Nav2. | [[JOSS]](https://doi.org/10.21105/joss.02783) [[GitHub]](https://github.com/SteveMacenski/slam_toolbox) |
-
-#### 🔦 **3D LiDAR Odometry & Mapping**
-
-> **3D LiDAR odometry** aligns point clouds using feature-based (edge/plane) or direct (ICP-style) registration, often with motion compensation for the continuously spinning sensor.
+> The general six-revolute arm has up to 16 inverse kinematic solutions. Reducing the problem to a single univariate polynomial was one of the long-standing problems of mechanism theory.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| LOAM | 2014 | Splits the problem into high-rate odometry and low-rate mapping using edge and planar features, defining the dominant LiDAR SLAM paradigm. | [[RSS]](https://doi.org/10.15607/RSS.2014.X.007) |
-| LeGO-LOAM | 2018 | Lightweight, ground-optimized LOAM with point cloud segmentation and two-step optimization for embedded ground vehicles. | [[IROS]](https://doi.org/10.1109/IROS.2018.8594299) [[GitHub]](https://github.com/RobustFieldAutonomyLab/LeGO-LOAM) |
-| SuMa | 2018 | Surfel-based LiDAR mapping with projective data association and map-based loop closure verification. | [[RSS]](https://doi.org/10.15607/RSS.2018.XIV.016) [[GitHub]](https://github.com/jbehley/SuMa) |
-| LO-Net | 2019 | End-to-end deep LiDAR odometry that learns features, normals, and dynamic masks, coupled with a mapping module. | [[arXiv]](https://arxiv.org/abs/1904.08242) |
-| SuMa++ | 2019 | Adds semantic segmentation to surfel maps to filter moving objects and constrain data association with semantic labels. | [[GitHub]](https://github.com/PRBonn/semantic_suma) |
-| HDL Graph SLAM | 2019 | Open-source 3D LiDAR graph SLAM using NDT scan matching with GPS, IMU, and floor-plane constraints. | [[GitHub]](https://github.com/koide3/hdl_graph_slam) |
-| LOAM-Livox | 2019 | Adapts LOAM to solid-state LiDARs with small fields of view and irregular scan patterns. | [[arXiv]](https://arxiv.org/abs/1909.06700) [[GitHub]](https://github.com/hku-mars/loam_livox) |
-| BALM | 2020 | Formulates LiDAR bundle adjustment on edge and plane features with features eliminated in closed form, enabling local-window map refinement. | [[arXiv]](https://arxiv.org/abs/2010.08215) [[GitHub]](https://github.com/hku-mars/BALM) |
-| F-LOAM | 2021 | Fast LOAM with a non-iterative two-stage distortion compensation for lower computational cost. | [[arXiv]](https://arxiv.org/abs/2107.00822) [[GitHub]](https://github.com/wh200720041/floam) |
-| MULLS | 2021 | Versatile LiDAR SLAM based on multi-metric linear least squares over ground, facade, pillar, and beam feature points. | [[arXiv]](https://arxiv.org/abs/2102.03771) [[GitHub]](https://github.com/YuePanEdward/MULLS) |
-| VoxelMap | 2021 | Adaptive probabilistic voxel map where each voxel holds a plane with uncertainty, improving LiDAR odometry accuracy and efficiency. | [[arXiv]](https://arxiv.org/abs/2109.07082) [[GitHub]](https://github.com/hku-mars/VoxelMap) |
-| CT-ICP | 2022 | Continuous-time ICP that is elastic within a scan but allows discontinuity between scans, robust to high-frequency motion. | [[arXiv]](https://arxiv.org/abs/2109.12979) [[GitHub]](https://github.com/jedeschaud/ct_icp) |
-| DLO | 2022 | Direct LiDAR odometry on dense point clouds with a fast keyframe-based submapping strategy for computationally limited robots. | [[arXiv]](https://arxiv.org/abs/2110.00605) [[GitHub]](https://github.com/vectr-ucla/direct_lidar_odometry) |
-| KISS-ICP | 2023 | Shows that carefully done point-to-point ICP with adaptive thresholding and a simple voxel map matches complex systems with almost no tuning. | [[arXiv]](https://arxiv.org/abs/2209.15397) [[GitHub]](https://github.com/PRBonn/kiss-icp) |
-| SHINE-Mapping | 2023 | Large-scale 3D mapping using sparse hierarchical implicit neural representations learned from LiDAR. | [[arXiv]](https://arxiv.org/abs/2210.02299) [[GitHub]](https://github.com/PRBonn/SHINE_mapping) |
-| NeRF-LOAM | 2023 | Neural implicit representation for large-scale incremental LiDAR odometry and mapping, jointly optimizing poses and an SDF. | [[arXiv]](https://arxiv.org/abs/2303.10709) [[GitHub]](https://github.com/JunyuanDeng/NeRF-LOAM) |
-| PIN-SLAM | 2024 | LiDAR SLAM using a point-based implicit neural map that is elastic under loop closure, giving globally consistent neural SDF maps. | [[arXiv]](https://arxiv.org/abs/2401.09101) [[GitHub]](https://github.com/PRBonn/PIN_SLAM) |
-| MAD-ICP | 2024 | LiDAR odometry based on a kd-tree forest and PCA-driven data matching that works out of the box across sensors. | [[arXiv]](https://arxiv.org/abs/2405.05828) [[GitHub]](https://github.com/rvp-group/mad-icp) |
-| GenZ-ICP | 2024 | Adaptively weights point-to-plane and point-to-point errors to stay robust in geometrically degenerate environments such as corridors. | [[arXiv]](https://arxiv.org/abs/2411.06766) [[GitHub]](https://github.com/cocel-postech/genz-icp) |
-| KISS-SLAM | 2025 | Extends the KISS philosophy to full LiDAR SLAM with local maps, loop closing, and pose graph optimization using minimal parameters. | [[GitHub]](https://github.com/PRBonn/kiss-slam) |
+| Inverse Kinematics of the General 6R Manipulator | 1993 | Reduces the general 6R problem to a 16th-degree polynomial by dialytic elimination, giving all solutions for arbitrary geometry. | [[JMD]](https://doi.org/10.1115/1.2919218) |
+| Efficient Inverse Kinematics for General 6R Manipulators | 1994 | Recasts the Raghavan-Roth elimination as an eigenvalue problem for a numerically robust and fast implementation. | [[TRA]](https://doi.org/10.1109/70.326569) |
+| A New and Efficient Algorithm for the General 6R | 2007 | Solves the general 6R inverse kinematics using kinematic mapping and the geometry of the Study quadric. | [[MMT]](https://www.sciencedirect.com/science/article/abs/pii/S0094114X06000310) |
+| Analytical IK for 7-DOF Redundant Manipulators | 2008 | Closed-form solution for spherical-revolute-spherical arms parameterized by an arm angle, with joint limits mapped to feasible arm-angle intervals. | [[T-RO]](https://doi.org/10.1109/TRO.2008.2003266) |
+| Analytic IK for the Universal Robots UR-5/UR-10 | 2013 | Derives the closed-form solution for the UR family, whose three parallel axes replace the usual spherical wrist. | [[Report]](https://repository.gatech.edu/handle/1853/50782) |
+| Position-based Kinematics for 7-DoF Serial Manipulators | 2018 | Analytical solution for 7-DOF arms with global configuration control, joint-limit handling, and singularity avoidance. | [[MMT]](https://doi.org/10.1016/j.mechmachtheory.2017.10.025) |
+| Analytical IK for Franka Emika Panda | 2021 | Geometric closed-form solver for the Panda, a 7-DOF arm whose joint offsets break the standard spherical-shoulder assumptions. | [[GitHub]](https://github.com/ffall007/franka_analytical_ik) |
 
-#### 🧲 **LiDAR-Inertial Odometry**
+#### 🤖 **Automatic Solver Generation**
 
-> **LiDAR-inertial** fusion uses the IMU to de-skew scans and survive aggressive motion, and the LiDAR to bound inertial drift. Tightly coupled LIO is now the default for handheld, legged, and aerial mapping.
+> **Solver generators** take a robot description and derive the closed-form solution automatically, so analytical IK no longer requires a hand derivation per robot.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| LIO-Mapping | 2019 | Tightly coupled 3D LiDAR-inertial odometry and mapping via sliding-window optimization with IMU preintegration. | [[arXiv]](https://arxiv.org/abs/1904.06993) [[GitHub]](https://github.com/hyye/lio-mapping) |
-| LINS | 2020 | LiDAR-inertial state estimator using a robocentric iterated error-state Kalman filter for efficient tightly coupled fusion. | [[arXiv]](https://arxiv.org/abs/1907.02233) [[GitHub]](https://github.com/ChaoqinRobotics/LINS---LiDAR-inertial-SLAM) |
-| LIO-SAM | 2020 | Tightly coupled LiDAR-inertial odometry via smoothing and mapping on a factor graph, with GPS and loop closure factors. | [[arXiv]](https://arxiv.org/abs/2007.00258) [[GitHub]](https://github.com/TixiaoShan/LIO-SAM) |
-| FAST-LIO | 2021 | Tightly coupled iterated EKF with a new Kalman gain formula whose cost depends on state rather than measurement dimension. | [[arXiv]](https://arxiv.org/abs/2010.08196) [[GitHub]](https://github.com/hku-mars/FAST_LIO) |
-| FAST-LIO2 | 2022 | Registers raw points directly to the map (no feature extraction) using an incremental kd-tree (ikd-Tree), supporting many LiDAR types at high rates. | [[arXiv]](https://arxiv.org/abs/2107.06829) [[GitHub]](https://github.com/hku-mars/FAST_LIO) |
-| CLINS | 2021 | Continuous-time trajectory estimation for LiDAR-inertial systems using B-splines, handling asynchronous and high-rate measurements. | [[arXiv]](https://arxiv.org/abs/2109.04687) [[GitHub]](https://github.com/APRIL-ZJU/clins) |
-| Faster-LIO | 2022 | Replaces the kd-tree with incremental sparse voxels (iVox) for lightweight LIO at very high frame rates on solid-state LiDARs. | [[RA-L]](https://doi.org/10.1109/LRA.2022.3152830) [[GitHub]](https://github.com/gaoxiang12/faster-lio) |
-| LOCUS 2.0 | 2022 | Robust, computationally efficient multi-sensor LiDAR odometry developed for large-scale underground exploration in the DARPA SubT Challenge. | [[arXiv]](https://arxiv.org/abs/2205.11784) [[GitHub]](https://github.com/NeBula-Autonomy/LOCUS) |
-| DLIO | 2023 | Direct LiDAR-inertial odometry with coarse-to-fine continuous-time motion correction and a nonlinear geometric observer. | [[arXiv]](https://arxiv.org/abs/2203.03749) [[GitHub]](https://github.com/vectr-ucla/direct_lidar_inertial_odometry) |
-| Point-LIO | 2023 | Point-by-point state update that removes in-frame motion distortion and tolerates IMU saturation under extremely aggressive motion. | [[AIS]](https://doi.org/10.1002/aisy.202200459) [[GitHub]](https://github.com/hku-mars/Point-LIO) |
-| GLIM | 2024 | Versatile range-inertial mapping framework with GPU-accelerated scan matching factors and global optimization. | [[GitHub]](https://github.com/koide3/glim) |
-| RESPLE | 2025 | Recursive Bayesian B-spline estimator for continuous-time 6-DoF motion, supporting LiDAR-only, multi-LiDAR, and LiDAR-inertial odometry in real time. | [[arXiv]](https://arxiv.org/abs/2504.11580) [[GitHub]](https://github.com/ASIG-X/RESPLE) |
-| RKO-LIO | 2025 | LiDAR-inertial odometry with a simplified IMU motion model and adaptive accelerometer-based regularization, using one configuration across sensors and platforms. | [[arXiv]](https://arxiv.org/abs/2509.06593) [[GitHub]](https://github.com/PRBonn/rko_lio) |
-| BIEVR-LIO | 2026 | Represents surfaces as voxel-wise oriented height (bump) images with map-informed sampling, for LiDAR-inertial odometry in geometrically sparse environments. | [[arXiv]](https://arxiv.org/abs/2604.14421) [[GitHub]](https://github.com/ethz-asl/bievr-lio) |
-
-#### 🎥 **LiDAR-Visual-Inertial Fusion**
-
-> **LiDAR-visual-inertial** systems combine all three modalities. Each covers the others' degenerate cases (dark scenes, long corridors, fast rotation), and the camera adds color for textured maps.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| V-LOAM | 2015 | Couples high-rate visual odometry with low-rate LiDAR scan matching for low-drift, robust motion estimation. | [[ICRA]](https://doi.org/10.1109/ICRA.2015.7139486) |
-| LIMO | 2018 | LiDAR-monocular visual odometry that uses LiDAR depth for camera features inside keyframe bundle adjustment. | [[arXiv]](https://arxiv.org/abs/1807.07524) [[GitHub]](https://github.com/johannes-graeter/limo) |
-| LIC-Fusion | 2019 | Tightly coupled MSCKF fusion of LiDAR features, visual features, and IMU with online spatial and temporal calibration. | [[arXiv]](https://arxiv.org/abs/1909.04102) |
-| LVI-SAM | 2021 | Tightly coupled LiDAR-visual-inertial odometry on a factor graph, where the visual and LiDAR subsystems aid and back up each other. | [[arXiv]](https://arxiv.org/abs/2104.10831) [[GitHub]](https://github.com/TixiaoShan/LVI-SAM) |
-| Super Odometry | 2021 | IMU-centric LiDAR-visual-inertial estimator with a coarse-to-fine pipeline, built for challenging perceptually degraded environments. | [[arXiv]](https://arxiv.org/abs/2104.14938) [[GitHub]](https://github.com/superxslam/SuperOdom) |
-| R2LIVE | 2021 | Robust, real-time LiDAR-inertial-visual estimator combining an error-state iterated Kalman filter with factor graph optimization. | [[arXiv]](https://arxiv.org/abs/2102.12400) [[GitHub]](https://github.com/hku-mars/r2live) |
-| R3LIVE | 2022 | Builds on FAST-LIO for geometry and adds a visual-inertial subsystem that renders map texture, producing dense RGB-colored maps in real time. | [[arXiv]](https://arxiv.org/abs/2109.07982) [[GitHub]](https://github.com/hku-mars/r3live) |
-| FAST-LIVO | 2022 | Fast, tightly coupled sparse-direct LiDAR-inertial-visual odometry that attaches image patches to LiDAR map points. | [[arXiv]](https://arxiv.org/abs/2203.00893) [[GitHub]](https://github.com/hku-mars/FAST-LIVO) |
-| Coco-LIC | 2023 | Continuous-time tightly coupled LiDAR-inertial-camera odometry using non-uniform B-splines placed adaptively according to motion. | [[arXiv]](https://arxiv.org/abs/2309.09808) [[GitHub]](https://github.com/APRIL-ZJU/Coco-LIC) |
-| FAST-LIVO2 | 2024 | Fast, direct LiDAR-inertial-visual odometry with a unified voxel map and sequential ESIKF update, running on onboard computers. | [[arXiv]](https://arxiv.org/abs/2408.14035) [[GitHub]](https://github.com/hku-mars/FAST-LIVO2) |
+| IKFast | 2010 | Analyzes a robot's kinematic equations symbolically and generates C++ code that returns all solutions; introduced with OpenRAVE. | [[Thesis]](https://www.ri.cmu.edu/publications/automated-construction-of-robotic-manipulation-programs/) [[GitHub]](https://github.com/rdiankov/openrave) |
+| IKBT | 2017 | Uses a behavior tree to automate symbolic closed-form IK derivation for arms up to 6 DOF, producing a LaTeX report and solver code. | [[arXiv]](https://arxiv.org/abs/1711.05412) [[GitHub]](https://github.com/uw-biorobotics/IKBT) |
+| IK-Geo | 2022 | Unifies IK for 6R arms through canonical geometric subproblems: closed-form when three axes intersect or are parallel, and by a low-dimensional search otherwise. | [[arXiv]](https://arxiv.org/abs/2211.05737) [[GitHub]](https://github.com/rpiRobotics/ik-geo) |
+| EAIK | 2024 | Automatically decomposes a manipulator's geometry into subproblems to derive analytical IK directly from a URDF or DH table. | [[arXiv]](https://arxiv.org/abs/2409.14815) [[GitHub]](https://github.com/OstermD/EAIK) |
 
 ---
 
-### 🧠 Learning-based SLAM
+### 🔁 Numerical & Optimization-based Inverse Kinematics
 
-> **Learning-based SLAM** replaces hand-designed components with networks: learned depth and pose, learned features and matchers, or fully differentiable pipelines that embed bundle adjustment inside the model.
+> **Numerical IK** iterates toward a solution instead of deriving one. It works for any mechanism and any set of constraints, at the price of needing an initial guess and returning one local solution at a time.
 
-#### 🔁 **Deep Visual Odometry & End-to-End SLAM**
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| SfMLearner | 2017 | Learns monocular depth and ego-motion jointly from unlabeled video using view synthesis as the supervisory signal. | [[arXiv]](https://arxiv.org/abs/1704.07813) [[GitHub]](https://github.com/tinghuiz/SfMLearner) |
-| DeepVO | 2017 | End-to-end visual odometry with a recurrent convolutional network that regresses poses directly from image sequences. | [[arXiv]](https://arxiv.org/abs/1709.08429) |
-| CNN-SLAM | 2017 | Fuses CNN-predicted dense depth with direct monocular SLAM to recover metric scale and dense maps. | [[arXiv]](https://arxiv.org/abs/1704.03489) |
-| UnDeepVO | 2018 | Unsupervised monocular visual odometry trained with stereo pairs to recover absolute scale. | [[arXiv]](https://arxiv.org/abs/1709.06841) |
-| CodeSLAM | 2018 | Learns a compact, optimizable latent code for dense depth conditioned on the image, enabling joint optimization of geometry and pose. | [[arXiv]](https://arxiv.org/abs/1804.00874) |
-| DVSO | 2018 | Deep virtual stereo odometry: feeds learned depth predictions into DSO as virtual stereo measurements. | [[arXiv]](https://arxiv.org/abs/1807.02570) |
-| DeepTAM | 2018 | Deep tracking and mapping: learned keyframe-based dense camera tracking and cost-volume depth estimation. | [[arXiv]](https://arxiv.org/abs/1808.01900) |
-| BA-Net | 2019 | Makes bundle adjustment a differentiable layer over learned feature pyramids and basis depth maps. | [[arXiv]](https://arxiv.org/abs/1806.04807) |
-| DeepV2D | 2020 | Alternates learned motion and depth modules in a differentiable geometric loop for video-to-depth estimation. | [[arXiv]](https://arxiv.org/abs/1812.04605) [[GitHub]](https://github.com/princeton-vl/DeepV2D) |
-| DF-VO | 2020 | Combines learned depth and optical flow with classical geometry for scale-consistent monocular visual odometry. | [[arXiv]](https://arxiv.org/abs/1909.09803) [[GitHub]](https://github.com/Huangying-Zhan/DF-VO) |
-| D3VO | 2020 | Integrates self-supervised deep depth, pose, and uncertainty into direct sparse odometry at three levels. | [[arXiv]](https://arxiv.org/abs/2003.01060) |
-| DeepFactors | 2020 | Real-time probabilistic dense monocular SLAM combining learned compact depth codes with photometric, reprojection, and geometric factors. | [[arXiv]](https://arxiv.org/abs/2001.05049) [[GitHub]](https://github.com/jczarnowski/DeepFactors) |
-| TartanVO | 2020 | A generalizable learning-based VO trained on diverse synthetic data with an intrinsics layer and scale-normalized loss. | [[arXiv]](https://arxiv.org/abs/2011.00359) [[GitHub]](https://github.com/castacks/tartanvo) |
-| DROID-SLAM | 2021 | Recurrent iterative updates of camera pose and pixelwise depth through a differentiable dense bundle adjustment layer; trained on synthetic data and robust across mono, stereo, and RGB-D. | [[arXiv]](https://arxiv.org/abs/2108.10869) [[GitHub]](https://github.com/princeton-vl/DROID-SLAM) |
-| TANDEM | 2021 | Real-time monocular tracking and dense mapping using deep multi-view stereo coupled with direct visual odometry. | [[arXiv]](https://arxiv.org/abs/2111.07418) [[GitHub]](https://github.com/tum-vision/tandem) |
-| DPVO | 2022 | Deep patch visual odometry: tracks sparse patches with a recurrent update operator, matching DROID accuracy at a fraction of the memory and runtime. | [[arXiv]](https://arxiv.org/abs/2208.04726) [[GitHub]](https://github.com/princeton-vl/DPVO) |
-| iSLAM | 2023 | Imperative SLAM: formulates front-end and back-end as a bilevel optimization so the learned front-end is supervised by the geometric back-end. | [[arXiv]](https://arxiv.org/abs/2306.07894) [[GitHub]](https://github.com/sair-lab/iSLAM) |
-| LEAP-VO | 2024 | Long-term effective any-point tracking for visual odometry, using temporal context and uncertainty to handle dynamics and occlusion. | [[arXiv]](https://arxiv.org/abs/2401.01887) [[GitHub]](https://github.com/chiaki530/leapvo) |
-| DPV-SLAM | 2024 | Adds proximity and classical loop closure to DPVO for an efficient deep monocular SLAM system on a single GPU. | [[arXiv]](https://arxiv.org/abs/2408.01654) [[GitHub]](https://github.com/princeton-vl/DPVO) |
-| MAC-VO | 2024 | Metrics-aware covariance for learning-based stereo VO, using learned uncertainty to select keypoints and weight pose graph residuals. | [[arXiv]](https://arxiv.org/abs/2409.09479) [[GitHub]](https://github.com/MAC-VO/MAC-VO) |
-| ViPE | 2025 | Video pose engine that estimates camera intrinsics, motion, and dense metric depth from unconstrained videos, supporting pinhole, wide-angle, and 360° cameras. | [[arXiv]](https://arxiv.org/abs/2508.10934) [[GitHub]](https://github.com/nv-tlabs/vipe) |
-| CalfVO | 2025 | Transformer monocular VO that predicts metric-scale poses without intrinsics or test-time optimization, merging overlapping windows by confidence-weighted averaging. | [[arXiv]](https://arxiv.org/abs/2510.03348) [[Website]](https://vladimiryugay.github.io/calfvo) |
-
-#### 🔗 **Learned Features, Matching & Tracking**
-
-> **Learned correspondence** is the most widely adopted learning component in SLAM: detectors, descriptors, matchers, and point trackers that slot into classical geometric pipelines.
+#### 📉 **Jacobian-based Iterative Methods**
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| SuperPoint | 2018 | Self-supervised interest point detector and descriptor trained with homographic adaptation. | [[arXiv]](https://arxiv.org/abs/1712.07629) [[GitHub]](https://github.com/magicleap/SuperPointPretrainedNetwork) |
-| D2-Net | 2019 | A single CNN that jointly detects and describes local features, robust to strong appearance changes. | [[arXiv]](https://arxiv.org/abs/1905.03561) [[GitHub]](https://github.com/mihaidusmanu/d2-net) |
-| R2D2 | 2019 | Learns keypoints that are both repeatable and reliable, with a descriptor reliability map. | [[arXiv]](https://arxiv.org/abs/1906.06195) [[GitHub]](https://github.com/naver/r2d2) |
-| HF-Net (hloc) | 2019 | Hierarchical localization from coarse global retrieval to fine local matching in one network; the basis of the hloc toolbox. | [[arXiv]](https://arxiv.org/abs/1812.03506) [[GitHub]](https://github.com/cvg/Hierarchical-Localization) |
-| SuperGlue | 2020 | Matches local features with a graph neural network and optimal transport, reasoning jointly about correspondences and outliers. | [[arXiv]](https://arxiv.org/abs/1911.11763) [[GitHub]](https://github.com/magicleap/SuperGluePretrainedNetwork) |
-| RAFT | 2020 | Recurrent all-pairs field transforms for optical flow; its iterative update design underlies DROID-SLAM and DPVO. | [[arXiv]](https://arxiv.org/abs/2003.12039) [[GitHub]](https://github.com/princeton-vl/RAFT) |
-| DISK | 2020 | Learns local features end-to-end with policy gradient, yielding dense, well-distributed keypoints. | [[arXiv]](https://arxiv.org/abs/2006.13566) [[GitHub]](https://github.com/cvlab-epfl/disk) |
-| LoFTR | 2021 | Detector-free dense matching with transformers, producing correspondences even in low-texture regions. | [[arXiv]](https://arxiv.org/abs/2104.00680) [[GitHub]](https://github.com/zju3dv/LoFTR) |
-| LightGlue | 2023 | A faster, adaptive successor to SuperGlue that stops early on easy image pairs. | [[arXiv]](https://arxiv.org/abs/2306.13643) [[GitHub]](https://github.com/cvg/LightGlue) |
-| ALIKED | 2023 | Lightweight keypoint and descriptor extraction with deformable transformation for efficient, accurate matching. | [[arXiv]](https://arxiv.org/abs/2304.03608) [[GitHub]](https://github.com/Shiaoming/ALIKED) |
-| RoMa | 2023 | Robust dense feature matching built on frozen foundation-model features with a transformer match decoder. | [[arXiv]](https://arxiv.org/abs/2305.15404) [[GitHub]](https://github.com/Parskatt/RoMa) |
-| CoTracker | 2023 | Transformer that tracks many points jointly through long videos, a building block for tracking-based VO. | [[arXiv]](https://arxiv.org/abs/2307.07635) [[GitHub]](https://github.com/facebookresearch/co-tracker) |
-| XFeat | 2024 | Accelerated features for lightweight image matching, fast enough for CPU-only and embedded robots. | [[arXiv]](https://arxiv.org/abs/2404.19174) [[GitHub]](https://github.com/verlab/accelerated_features) |
+| Resolved Motion Rate Control | 1969 | Introduces Jacobian-based coordinated control: commanding end-effector velocity and solving for joint rates. | [[TMMS]](https://doi.org/10.1109/TMMS.1969.299896) |
+| Damped Least Squares (Wampler) | 1986 | Adds damping to the pseudoinverse so that joint velocities stay bounded near singularities. | [[SMC]](https://doi.org/10.1109/TSMC.1986.289285) |
+| Singularity-Robust Inverse | 1986 | Independently proposes the damped pseudoinverse and analyzes the trade-off between tracking accuracy and feasibility. | [[JDSMC]](https://doi.org/10.1115/1.3143764) |
+| Cyclic Coordinate Descent | 1991 | Combines per-joint coordinate descent with a quasi-Newton refinement for fast, derivative-light IK. | [[TRA]](https://doi.org/10.1109/70.86079) |
+| Introduction to Inverse Kinematics | 2004 | Widely used tutorial comparing the Jacobian transpose, pseudoinverse, and damped least squares methods. | [[PDF]](https://mathweb.ucsd.edu/~sbuss/ResearchWeb/ikmethods/iksurvey.pdf) |
+| Selectively Damped Least Squares | 2005 | Damps each singular direction separately according to how hard it is to reach the target, improving convergence over uniform damping. | [[JGT]](https://doi.org/10.1080/2151237X.2005.10129202) |
+| FABRIK | 2011 | Forward and backward reaching IK that works on joint positions along lines instead of rotation angles; popular in animation. | [[GM]](https://doi.org/10.1016/j.gmod.2011.05.003) |
+| Solvability-Unconcerned IK | 2011 | Levenberg-Marquardt IK with a robust damping rule that converges whether or not the target is reachable. | [[T-RO]](https://doi.org/10.1109/TRO.2011.2148230) |
+| Manipulator Differential Kinematics, Part I | 2022 | Tutorial that derives numerical IK and resolved-rate control from the elementary transform sequence, with runnable notebooks. | [[arXiv]](https://arxiv.org/abs/2207.01796) [[GitHub]](https://github.com/jhavl/dkt) |
+
+#### 🎚 **Optimization-based & Multi-Objective IK**
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| TRAC-IK | 2015 | Runs a Newton solver with random restarts concurrently with sequential quadratic programming, substantially raising solve rates under joint limits. | [[Humanoids]](https://doi.org/10.1109/HUMANOIDS.2015.7363472) [[Bitbucket]](https://bitbucket.org/traclabs/trac_ik) |
+| RelaxedIK | 2018 | Treats pose matching as one weighted objective among several, yielding smooth motion free of self-collisions and singularities. | [[RSS]](https://doi.org/10.15607/RSS.2018.XIV.043) [[GitHub]](https://github.com/uwgraphics/relaxed_ik) |
+| BioIK | 2019 | Memetic algorithm combining evolutionary and particle swarm search with gradient steps for full-body IK with arbitrary goal types. | [[TEVC]](https://doi.org/10.1109/TEVC.2018.2867601) [[GitHub]](https://github.com/TAMS-Group/bio_ik) |
+| Global IK via Mixed-Integer Convex Optimization | 2019 | Relaxes the rotation constraints into a mixed-integer convex program that finds a solution or certifies infeasibility. | [[IJRR]](https://doi.org/10.1177/0278364919846512) |
+| CollisionIK | 2021 | Per-instant pose optimization that avoids static and dynamic obstacles while matching end-effector goals. | [[arXiv]](https://arxiv.org/abs/2102.13187) |
+| Riemannian Optimization for Distance-Geometric IK | 2021 | Reformulates IK as a low-rank distance matrix completion problem solved on a Riemannian manifold. | [[arXiv]](https://arxiv.org/abs/2108.13720) |
+| Convex Iteration for Distance-Geometric IK | 2021 | Solves the distance-geometric IK formulation by a sequence of semidefinite programs. | [[arXiv]](https://arxiv.org/abs/2109.03374) |
+| RangedIK | 2023 | Extends RelaxedIK with tolerance ranges on task degrees of freedom so that spare freedom is used for smoothness and feasibility. | [[arXiv]](https://arxiv.org/abs/2302.13935) [[GitHub]](https://github.com/uwgraphics/relaxed_ik_core) |
+| PyRoki | 2025 | Modular, differentiable kinematic optimization toolkit in JAX covering IK, motion retargeting, and trajectory optimization on CPU and GPU. | [[arXiv]](https://arxiv.org/abs/2505.03728) [[GitHub]](https://github.com/chungmin99/pyroki) |
 
 ---
 
-### 🌈 Neural Implicit SLAM
+### 📈 Differential Kinematics, Redundancy & Singularities
 
-> **Neural implicit SLAM** represents the scene as a neural field (an MLP, feature grid, or neural points) and optimizes map and camera poses through differentiable volume rendering. It produces continuous, hole-free geometry and view synthesis from a compact map.
+> **Differential kinematics** works at the velocity level, where the map from joints to task is linear. It is the natural setting for real-time control, for using spare degrees of freedom, and for understanding the configurations where a mechanism loses mobility.
+
+#### 🧭 **Manipulability & Singularities**
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| NeRF | 2020 | Represents a scene as a continuous radiance field optimized by volume rendering; the representation that triggered neural SLAM. | [[arXiv]](https://arxiv.org/abs/2003.08934) |
-| iNeRF | 2021 | Inverts a trained NeRF to estimate camera pose by gradient descent on photometric error. | [[arXiv]](https://arxiv.org/abs/2012.05877) |
-| BARF | 2021 | Bundle-adjusting neural radiance fields: learns NeRF from imperfect poses with coarse-to-fine positional encoding. | [[arXiv]](https://arxiv.org/abs/2104.06405) [[GitHub]](https://github.com/chenhsuanlin/bundle-adjusting-NeRF) |
-| iMAP | 2021 | First SLAM system with a single MLP as the only scene representation, trained live with keyframe selection and active sampling. | [[arXiv]](https://arxiv.org/abs/2103.12352) |
-| Instant-NGP | 2022 | Multiresolution hash encoding that trains neural fields in seconds, making real-time neural mapping practical. | [[arXiv]](https://arxiv.org/abs/2201.05989) [[GitHub]](https://github.com/NVlabs/instant-ngp) |
-| NICE-SLAM | 2022 | Hierarchical feature grids with pretrained decoders for scalable, detailed dense RGB-D SLAM in larger indoor scenes. | [[arXiv]](https://arxiv.org/abs/2112.12130) [[GitHub]](https://github.com/cvg/nice-slam) |
-| iSDF | 2022 | Real-time neural signed distance field reconstruction from posed depth for robot perception and planning. | [[arXiv]](https://arxiv.org/abs/2204.02296) [[GitHub]](https://github.com/facebookresearch/iSDF) |
-| Vox-Fusion | 2022 | Dense tracking and mapping with a sparse voxel octree of neural features that grows dynamically with the scene. | [[arXiv]](https://arxiv.org/abs/2210.15858) [[GitHub]](https://github.com/zju3dv/Vox-Fusion) |
-| Orbeez-SLAM | 2023 | Real-time monocular visual SLAM that pairs ORB-SLAM2 tracking with an Instant-NGP map trained online without pretraining. | [[arXiv]](https://arxiv.org/abs/2209.13274) [[GitHub]](https://github.com/MarvinChung/Orbeez-SLAM) |
-| NeRF-SLAM | 2023 | Combines DROID-SLAM dense depth and uncertainty with an Instant-NGP radiance field for real-time dense monocular SLAM. | [[arXiv]](https://arxiv.org/abs/2210.13641) [[GitHub]](https://github.com/ToniRV/NeRF-SLAM) |
-| ESLAM | 2023 | Efficient dense SLAM using multi-scale axis-aligned feature planes and a TSDF-based decoder. | [[arXiv]](https://arxiv.org/abs/2211.11704) [[GitHub]](https://github.com/idiap/ESLAM) |
-| DIM-SLAM | 2023 | Dense RGB-only SLAM with neural implicit maps, using a multi-view warping loss instead of depth supervision. | [[arXiv]](https://arxiv.org/abs/2301.08930) [[GitHub]](https://github.com/HKUST-3DV/DIM-SLAM) |
-| vMAP | 2023 | Vectorized object-level mapping where each object has its own small MLP, giving watertight object models without 3D priors. | [[arXiv]](https://arxiv.org/abs/2302.01838) [[GitHub]](https://github.com/kxhit/vMAP) |
-| NICER-SLAM | 2023 | RGB-only neural implicit SLAM that optimizes scene and poses end-to-end with monocular depth, normal, and flow cues. | [[arXiv]](https://arxiv.org/abs/2302.03594) |
-| Co-SLAM | 2023 | Joint coordinate and sparse parametric (hash grid) encodings with global bundle adjustment for fast, hole-filling RGB-D SLAM. | [[arXiv]](https://arxiv.org/abs/2304.14377) [[GitHub]](https://github.com/HengyiWang/Co-SLAM) |
-| Point-SLAM | 2023 | Dense neural point cloud SLAM where features are anchored on points whose density adapts to scene detail. | [[arXiv]](https://arxiv.org/abs/2304.04278) [[GitHub]](https://github.com/eriksandstroem/Point-SLAM) |
-| H2-Mapping | 2023 | Real-time dense mapping with a hierarchical hybrid representation (octree SDF priors plus multiresolution hash) for edge computers. | [[arXiv]](https://arxiv.org/abs/2306.03207) [[GitHub]](https://github.com/SYSU-STAR/H2-Mapping) |
-| UncLe-SLAM | 2023 | Learns per-pixel depth uncertainty online for dense neural SLAM, improving tracking and mapping from noisy sensors. | [[arXiv]](https://arxiv.org/abs/2306.11048) [[GitHub]](https://github.com/kev-in-ta/UncLe-SLAM) |
-| MIPS-Fusion | 2023 | Multi-implicit-submaps for scalable and robust online neural RGB-D reconstruction with loop closure. | [[arXiv]](https://arxiv.org/abs/2308.08741) |
-| GO-SLAM | 2023 | Global optimization for consistent 3D instant reconstruction: online loop closing and full bundle adjustment with a neural map. | [[arXiv]](https://arxiv.org/abs/2309.02436) [[GitHub]](https://github.com/youmi-zym/GO-SLAM) |
-| LONER | 2023 | LiDAR-only neural representations for real-time SLAM, coupling ICP tracking with an online-trained neural field. | [[arXiv]](https://arxiv.org/abs/2309.04937) [[GitHub]](https://github.com/umautobots/LONER) |
-| HI-SLAM | 2023 | Monocular real-time dense mapping with hybrid implicit fields, combining deep-learned tracking with monocular depth priors. | [[arXiv]](https://arxiv.org/abs/2310.04787) |
-| Loopy-SLAM | 2024 | Dense neural point-cloud SLAM with submaps and online loop closure through global place recognition and pose graph optimization. | [[arXiv]](https://arxiv.org/abs/2402.09944) [[GitHub]](https://github.com/eriksandstroem/Loopy-SLAM) |
-| GlORIE-SLAM | 2024 | Globally optimized RGB-only implicit encoding point cloud SLAM with deformable neural points and monocular depth priors. | [[arXiv]](https://arxiv.org/abs/2403.19549) [[GitHub]](https://github.com/zhangganlin/GlORIE-SLAM) |
+| Articulated Hands: Force Control and Kinematic Issues | 1982 | Introduces the Jacobian condition number as a measure of kinematic accuracy and isotropy. | [[IJRR]](https://doi.org/10.1177/027836498200100102) |
+| Manipulability of Robotic Mechanisms | 1985 | Defines the manipulability ellipsoid and measure, the most widely used index of distance from singularity. | [[IJRR]](https://doi.org/10.1177/027836498500400201) |
+| Dexterity Measures for Redundant Manipulators | 1987 | Compares determinant, condition number, minimum singular value, and joint-range measures for design and control. | [[IJRR]](https://doi.org/10.1177/027836498700600206) |
+| Singularity Analysis of Closed-Loop Kinematic Chains | 1990 | Classifies singularities into three types using the two Jacobians of a closed chain; the standard taxonomy for parallel robots. | [[TRA]](https://doi.org/10.1109/70.56660) |
+| Geometry-Aware Manipulability Learning, Tracking and Transfer | 2021 | Treats manipulability ellipsoids as points on the manifold of symmetric positive definite matrices to learn and track them. | [[arXiv]](https://arxiv.org/abs/1811.11050) |
+| Manipulator Differential Kinematics, Part II | 2022 | Tutorial on the manipulator Hessian, higher-order derivatives, and their use in manipulability-maximizing control. | [[arXiv]](https://arxiv.org/abs/2207.01794) [[GitHub]](https://github.com/jhavl/dkt) |
+
+#### 🧩 **Redundancy Resolution & Task Priority**
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| Automatic Supervisory Control of Multibody Mechanisms | 1977 | Introduces null-space projection of a secondary objective gradient, the basis of redundancy resolution. | [[SMC]](https://doi.org/10.1109/TSMC.1977.4309644) |
+| Review of Pseudoinverse Control | 1983 | Analyzes pseudoinverse control of redundant manipulators, including its non-repeatability over closed paths. | [[SMC]](https://doi.org/10.1109/TSMC.1983.6313123) |
+| Operational Space Formulation | 1987 | Unified framework for motion and force control in task space, including the dynamically consistent treatment of redundancy. | [[JRA]](https://doi.org/10.1109/JRA.1987.1087068) |
+| Task-Priority Based Redundancy Control | 1987 | Formalizes executing a secondary task only in the null space of a primary one. | [[IJRR]](https://doi.org/10.1177/027836498700600201) |
+| A General Framework for Managing Multiple Tasks | 1991 | Recursive formulation extending task priority to any number of levels for highly redundant systems. | [[ICAR]](https://doi.org/10.1109/ICAR.1991.240390) |
+| Singularity-Robust Task-Priority Redundancy Resolution | 1997 | Decouples task levels to avoid the algorithmic singularities that arise when tasks conflict. | [[TRA]](https://doi.org/10.1109/70.585902) |
+| Generalizing Task Priority to Inequality Tasks | 2011 | Extends the prioritized framework to inequality constraints by solving a sequence of quadratic programs. | [[T-RO]](https://doi.org/10.1109/TRO.2011.2142450) |
+| Hierarchical Quadratic Programming | 2014 | Dedicated solver for strict hierarchies of equality and inequality tasks, fast enough for online humanoid motion generation. | [[IJRR]](https://doi.org/10.1177/0278364914521306) |
+| Saturation in the Null Space | 2015 | Handles hard joint position, velocity, and acceleration bounds by saturating joints one at a time and redistributing motion. | [[T-RO]](https://doi.org/10.1109/TRO.2015.2418582) |
+| NEO | 2021 | Reactive velocity controller posed as a QP that avoids obstacles and joint limits while maximizing manipulability. | [[arXiv]](https://arxiv.org/abs/2010.08686) |
+| A Holistic Approach to Reactive Mobile Manipulation | 2022 | Treats a mobile base and arm as one kinematic chain in a reactive QP controller for motion on the move. | [[arXiv]](https://arxiv.org/abs/2109.04749) |
 
 ---
 
-### ✨ 3D Gaussian Splatting SLAM
+### 🧠 Learning-based Kinematics
 
-> **3D Gaussian Splatting (3DGS) SLAM** uses explicit anisotropic Gaussians as the map and a fast differentiable rasterizer for tracking and mapping. Compared with neural fields, it renders in real time, is easy to edit and deform, and has quickly become the dominant dense representation.
+> **Learning-based kinematics** replaces or augments the analytic model with data. Learned IK produces many diverse candidate solutions in one batched forward pass; learned kinematic models describe robots whose geometry is unknown, soft, or changing.
+
+#### 🎲 **Learned & Generative Inverse Kinematics**
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| 3D Gaussian Splatting | 2023 | Real-time radiance field rendering with optimized anisotropic 3D Gaussians and a tile-based differentiable rasterizer. | [[arXiv]](https://arxiv.org/abs/2308.04079) [[GitHub]](https://github.com/graphdeco-inria/gaussian-splatting) |
-| SplaTAM | 2024 | Splat, track and map 3D Gaussians for dense RGB-D SLAM, using a silhouette mask to drive densification and tracking. | [[arXiv]](https://arxiv.org/abs/2312.02126) [[GitHub]](https://github.com/spla-tam/SplaTAM) |
-| MonoGS | 2024 | Gaussian Splatting SLAM: the first monocular 3DGS SLAM, with direct pose optimization against Gaussians and geometric regularization. | [[arXiv]](https://arxiv.org/abs/2312.06741) [[GitHub]](https://github.com/muskie82/MonoGS) |
-| GS-SLAM | 2024 | Dense visual SLAM with 3D Gaussian Splatting using adaptive expansion and a coarse-to-fine tracking strategy. | [[arXiv]](https://arxiv.org/abs/2311.11700) |
-| Gaussian-SLAM | 2023 | Photo-realistic dense SLAM that organizes the scene into Gaussian submaps for larger environments. | [[arXiv]](https://arxiv.org/abs/2312.10070) [[GitHub]](https://github.com/VladimirYugay/Gaussian-SLAM) |
-| Photo-SLAM | 2024 | Real-time simultaneous localization and photorealistic mapping with hyper primitives, running on mono, stereo, and RGB-D cameras including embedded devices. | [[arXiv]](https://arxiv.org/abs/2311.16728) [[GitHub]](https://github.com/HuajianUP/Photo-SLAM) |
-| SGS-SLAM | 2024 | Semantic Gaussian Splatting for dense SLAM, adding semantic labels to Gaussians for joint appearance, geometry, and semantics. | [[arXiv]](https://arxiv.org/abs/2402.03246) |
-| SemGauss-SLAM | 2024 | Dense semantic Gaussian Splatting SLAM that embeds semantic features in Gaussians and uses them in bundle adjustment. | [[arXiv]](https://arxiv.org/abs/2403.07494) |
-| GS-ICP SLAM | 2024 | Fuses Generalized ICP with 3DGS by sharing covariances between registration and mapping, reaching very high system speed. | [[arXiv]](https://arxiv.org/abs/2403.12550) [[GitHub]](https://github.com/Lab-of-AI-and-Robotics/GS_ICP_SLAM) |
-| CG-SLAM | 2024 | Efficient dense RGB-D SLAM in a consistent uncertainty-aware 3D Gaussian field. | [[arXiv]](https://arxiv.org/abs/2403.16095) |
-| MM3DGS-SLAM | 2024 | Multi-modal 3D Gaussian Splatting SLAM using vision, depth, and inertial measurements. | [[arXiv]](https://arxiv.org/abs/2404.00923) |
-| RTG-SLAM | 2024 | Real-time 3D reconstruction at scale with a compact Gaussian representation that separates opaque surface and transparent Gaussians. | [[arXiv]](https://arxiv.org/abs/2404.19706) [[GitHub]](https://github.com/MisEty/RTG-SLAM) |
-| Splat-SLAM | 2024 | Globally optimized RGB-only SLAM with 3D Gaussians that deform with keyframe pose and depth updates. | [[arXiv]](https://arxiv.org/abs/2405.16544) [[GitHub]](https://github.com/google-research/Splat-SLAM) |
-| LoopSplat | 2024 | Loop closure for Gaussian submaps by registering 3DGS directly, giving globally consistent dense maps. | [[arXiv]](https://arxiv.org/abs/2408.10154) [[GitHub]](https://github.com/GradientSpaces/LoopSplat) |
-| LIV-GaussMap | 2024 | LiDAR-inertial-visual fusion for real-time 3D radiance field map rendering with Gaussians initialized from LiDAR structure. | [[arXiv]](https://arxiv.org/abs/2401.14857) [[GitHub]](https://github.com/sheng00125/LIV-GaussMap) |
-| Gaussian-LIC | 2024 | Photo-realistic LiDAR-inertial-camera SLAM with 3D Gaussian Splatting, running in real time. | [[arXiv]](https://arxiv.org/abs/2404.06926) [[GitHub]](https://github.com/APRIL-ZJU/Gaussian-LIC) |
-| DG-SLAM | 2024 | Robust dynamic Gaussian Splatting SLAM with hybrid pose optimization and motion mask generation. | [[arXiv]](https://arxiv.org/abs/2411.08373) |
-| DROID-Splat | 2024 | Combines end-to-end DROID-SLAM tracking with a 3DGS renderer and monocular depth priors for dense SLAM in the wild. | [[arXiv]](https://arxiv.org/abs/2411.17660) [[GitHub]](https://github.com/ChenHoy/DROID-Splat) |
-| HI-SLAM2 | 2024 | Geometry-aware Gaussian SLAM for fast monocular scene reconstruction using learned priors and online loop closure. | [[arXiv]](https://arxiv.org/abs/2411.17982) [[GitHub]](https://github.com/Willyzw/HI-SLAM2) |
-| VINGS-Mono | 2025 | Visual-inertial Gaussian Splatting monocular SLAM designed for kilometer-scale outdoor scenes. | [[arXiv]](https://arxiv.org/abs/2501.08286) |
-| WildGS-SLAM | 2025 | Monocular Gaussian Splatting SLAM in dynamic environments, using uncertainty maps from foundation-model features to ignore distractors. | [[arXiv]](https://arxiv.org/abs/2504.03886) [[GitHub]](https://github.com/GradientSpaces/WildGS-SLAM) |
-| GS-LIVO | 2025 | LiDAR-inertial-visual odometry with a Gaussian map, sliding-window optimization, and ESKF fusion with photometric gradients; runs on a Jetson Orin NX. | [[arXiv]](https://arxiv.org/abs/2501.08672) |
-| S3PO-GS | 2025 | RGB-only outdoor 3DGS SLAM with self-consistent tracking anchored in the rendered 3DGS pointmap to avoid scale drift. | [[arXiv]](https://arxiv.org/abs/2507.03737) [[GitHub]](https://github.com/3DAgentWorld/S3PO-GS) |
-| Gaussian-LIC2 | 2025 | Real-time LiDAR-inertial-camera Gaussian Splatting SLAM with continuous-time trajectory optimization and a zero-shot depth model to fill LiDAR blind areas. | [[arXiv]](https://arxiv.org/abs/2507.04004) [[Website]](https://xingxingzuo.github.io/gaussian_lic2) |
-| OmniMap | 2025 | Online mapping with a hybrid 3DGS-voxel representation that jointly captures appearance, geometry, and open-vocabulary instance semantics in real time. | [[arXiv]](https://arxiv.org/abs/2509.07500) [[Website]](https://omni-map.github.io/) |
-| VIGS-SLAM | 2025 | Visual-inertial 3DGS SLAM that jointly optimizes camera poses, depths, and IMU states in one framework for tracking and reconstruction. | [[arXiv]](https://arxiv.org/abs/2512.02293) [[Website]](https://vigs-slam.github.io) |
-| Flash-Mono | 2026 | Monocular Gaussian SLAM that predicts 2D Gaussian surfel attributes and poses feed-forward from multi-frame context, with hidden-state-based loop closure. | [[arXiv]](https://arxiv.org/abs/2604.03092) [[Website]](https://victkk.github.io/flash-mono) |
+| Learning Inverse Kinematics | 2001 | Learns IK for a redundant humanoid arm locally at the velocity level with locally weighted regression, sidestepping the non-convexity of the solution set. | [[IROS]](https://doi.org/10.1109/IROS.2001.973374) |
+| Analyzing Inverse Problems with Invertible Neural Networks | 2018 | Introduces invertible networks for ambiguous inverse problems and uses planar-arm inverse kinematics as a test case. | [[arXiv]](https://arxiv.org/abs/1808.04730) |
+| Learning Constrained Distributions of Robot Configurations | 2021 | Trains a generative adversarial network to sample configurations satisfying kinematic constraints, used to seed IK and planning. | [[arXiv]](https://arxiv.org/abs/2011.05717) |
+| IKFlow | 2022 | Conditional normalizing flow that generates diverse solutions covering the full self-motion manifold of redundant arms. | [[arXiv]](https://arxiv.org/abs/2111.08933) [[GitHub]](https://github.com/jstmn/ikflow) |
+| Neural Inverse Kinematics | 2022 | Hierarchical hypernetwork that models the conditional distribution of each joint given the previous ones along the chain. | [[arXiv]](https://arxiv.org/abs/2205.10837) |
+| Generative Graphical Inverse Kinematics | 2022 | Graph neural network that generates IK solutions in a distance-geometric representation and generalizes across different manipulators. | [[arXiv]](https://arxiv.org/abs/2209.08812) |
+| CycleIK | 2023 | Neuro-inspired IK using a GAN and an MLP that can be combined with SLSQP or genetic optimization, evaluated on the NICOL semi-humanoid robot. | [[arXiv]](https://arxiv.org/abs/2307.11554) |
+
+#### 🪞 **Learned Kinematic Models & Self-Modeling**
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| Resilient Machines Through Continuous Self-Modeling | 2006 | A legged robot infers its own structure from sensorimotor data and re-models itself after damage. | [[Science]](https://doi.org/10.1126/science.1133687) |
+| Camera-to-Robot Pose Estimation from a Single Image (DREAM) | 2020 | Detects robot keypoints in an RGB image and recovers the camera-to-robot transform, enabling markerless online calibration. | [[arXiv]](https://arxiv.org/abs/1911.09231) [[GitHub]](https://github.com/NVlabs/DREAM) |
+| RoboPose | 2021 | Render-and-compare estimation of a robot's 6D pose and joint angles from a single image. | [[arXiv]](https://arxiv.org/abs/2104.09359) |
+| Full-Body Visual Self-Modeling of Robot Morphologies | 2022 | Learns an implicit query-based model of the space a robot occupies as a function of its joint state, usable for planning. | [[arXiv]](https://arxiv.org/abs/2111.06389) |
+| Neural Jacobian Fields | 2024 | Learns a dense 3D field mapping motor commands to motion from video alone, enabling closed-loop control of soft and unconventional robots with one camera. | [[arXiv]](https://arxiv.org/abs/2407.08722) |
 
 ---
 
-### 🚀 Feed-Forward & Foundation Model SLAM
+### ⚡ Differentiable & GPU-Accelerated Kinematics
 
-> **Feed-forward SLAM** builds on 3D foundation models that regress pointmaps, depth, and camera poses directly from images. Instead of solving geometry from scratch, these systems start from a strong learned prior, often without known camera intrinsics, and add a light optimization or memory mechanism on top.
+> **Differentiable kinematics** exposes forward kinematics and its derivatives to optimizers and learning frameworks. Batching the same computation on a GPU turns IK from one query at a time into thousands in parallel.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| DUSt3R | 2024 | Regresses dense pointmaps for an image pair in a shared frame without calibration, unifying matching, depth, and pose in one network. | [[arXiv]](https://arxiv.org/abs/2312.14132) [[GitHub]](https://github.com/naver/dust3r) |
-| MASt3R | 2024 | Grounds image matching in 3D by adding a dense local feature head and fast reciprocal matching to DUSt3R. | [[arXiv]](https://arxiv.org/abs/2406.09756) [[GitHub]](https://github.com/naver/mast3r) |
-| Spann3R | 2024 | Extends DUSt3R with a spatial memory so pointmaps are predicted incrementally in a global frame without optimization. | [[arXiv]](https://arxiv.org/abs/2408.16061) [[GitHub]](https://github.com/HengyiWang/spann3r) |
-| MASt3R-SfM | 2024 | Fully integrated structure-from-motion built on MASt3R with scalable retrieval and global alignment. | [[arXiv]](https://arxiv.org/abs/2409.19152) [[GitHub]](https://github.com/naver/mast3r) |
-| MonST3R | 2024 | Adapts DUSt3R to dynamic scenes by predicting per-timestep pointmaps, enabling pose and geometry estimation in the presence of motion. | [[arXiv]](https://arxiv.org/abs/2410.03825) [[GitHub]](https://github.com/Junyi42/monst3r) |
-| MegaSaM | 2024 | Accurate, fast, and robust structure and motion from casual dynamic videos, extending DROID-style bundle adjustment with motion and depth priors. | [[arXiv]](https://arxiv.org/abs/2412.04463) [[GitHub]](https://github.com/mega-sam/mega-sam) |
-| SLAM3R | 2024 | Real-time dense scene reconstruction from monocular RGB video with feed-forward local reconstruction and global registration, without solving for poses explicitly. | [[arXiv]](https://arxiv.org/abs/2412.09401) [[GitHub]](https://github.com/PKU-VCL-3DV/SLAM3R) |
-| MASt3R-SLAM | 2024 | Real-time dense SLAM built bottom-up from the MASt3R two-view prior, with pointmap matching, tracking, local fusion, and loop closure for uncalibrated cameras. | [[arXiv]](https://arxiv.org/abs/2412.12392) [[GitHub]](https://github.com/rmurai0610/MASt3R-SLAM) |
-| CUT3R | 2025 | Continuous 3D perception model with a persistent recurrent state that is read and updated online for each incoming frame. | [[arXiv]](https://arxiv.org/abs/2501.12387) [[GitHub]](https://github.com/CUT3R/CUT3R) |
-| Fast3R | 2025 | Processes a thousand or more images in a single forward pass for multi-view 3D reconstruction. | [[arXiv]](https://arxiv.org/abs/2501.13928) [[GitHub]](https://github.com/facebookresearch/fast3r) |
-| MUSt3R | 2025 | Multi-view extension of DUSt3R with a symmetric architecture and memory mechanism for offline SfM and online visual odometry. | [[arXiv]](https://arxiv.org/abs/2503.01661) [[GitHub]](https://github.com/naver/must3r) |
-| VGGT | 2025 | Visual geometry grounded transformer that predicts cameras, depth, pointmaps, and tracks for many views in one feed-forward pass. | [[arXiv]](https://arxiv.org/abs/2503.11651) [[GitHub]](https://github.com/facebookresearch/vggt) |
-| VGGT-SLAM | 2025 | Dense RGB SLAM that aligns VGGT submaps by optimizing on the SL(4) manifold to resolve projective ambiguity from uncalibrated input. | [[arXiv]](https://arxiv.org/abs/2505.12549) [[GitHub]](https://github.com/MIT-SPARK/VGGT-SLAM) |
-| StreamVGGT | 2025 | Streaming 4D visual geometry transformer with causal attention and cached memory for online reconstruction. | [[arXiv]](https://arxiv.org/abs/2507.11539) [[GitHub]](https://github.com/wzzheng/StreamVGGT) |
-| π³ | 2025 | Permutation-equivariant visual geometry learning that removes the fixed reference view from feed-forward reconstruction. | [[arXiv]](https://arxiv.org/abs/2507.13347) [[GitHub]](https://github.com/yyfz/Pi3) |
-| VGGT-Long | 2025 | Chunk, loop, and align strategy that scales VGGT to kilometer-long RGB sequences. | [[arXiv]](https://arxiv.org/abs/2507.16443) [[GitHub]](https://github.com/DengKaiCQ/VGGT-Long) |
-| MapAnything | 2025 | Universal feed-forward metric 3D reconstruction that accepts optional intrinsics, poses, and depth as extra inputs. | [[arXiv]](https://arxiv.org/abs/2509.13414) [[GitHub]](https://github.com/facebookresearch/map-anything) |
-| Depth Anything 3 | 2025 | Recovers consistent geometry from any number of views with a plain transformer and a depth-ray prediction target. | [[arXiv]](https://arxiv.org/abs/2511.10647) [[GitHub]](https://github.com/ByteDance-Seed/Depth-Anything-3) |
-| Point3R | 2025 | Online dense reconstruction with an explicit spatial pointer memory tied to 3D positions, using a hierarchical 3D position embedding and memory fusion. | [[arXiv]](https://arxiv.org/abs/2507.02863) [[GitHub]](https://github.com/YkiWu/Point3R) |
-| STream3R | 2025 | Reformulates pointmap prediction as a decoder-only causal transformer for streaming reconstruction of static and dynamic scenes. | [[arXiv]](https://arxiv.org/abs/2508.10893) [[Website]](https://nirvanalan.github.io/projects/stream3r) |
-| SAIL-Recon | 2025 | Augments a scene-regression transformer with visual localization: builds a neural scene representation from anchor images, then localizes all remaining images for large-scale SfM. | [[arXiv]](https://arxiv.org/abs/2508.17972) [[Website]](https://hkust-sail.github.io/sail-recon/) |
-| ViSTA-SLAM | 2025 | Intrinsics-free monocular SLAM with a lightweight symmetric two-view association model as front-end and a Sim(3) pose graph with loop closure as back-end. | [[arXiv]](https://arxiv.org/abs/2509.01584) [[GitHub]](https://github.com/zhangganlin/vista-slam) |
-| SLAM-Former | 2025 | Puts the SLAM front-end (incremental tracking and mapping) and back-end (global refinement) into one transformer that alternates between the two. | [[arXiv]](https://arxiv.org/abs/2509.16909) [[GitHub]](https://github.com/Tsinghua-MARS-Lab/SLAM-Former) |
-| MASt3R-Fusion | 2025 | Fuses feed-forward pointmap regression with IMU and GNSS in a factor graph using Sim(3) visual alignment constraints for metric-scale real-time SLAM. | [[arXiv]](https://arxiv.org/abs/2509.20757) [[GitHub]](https://github.com/GREAT-WHU/MASt3R-Fusion) |
-| TTT3R | 2025 | Treats CUT3R-style recurrent reconstruction as online learning, deriving a confidence-based state update rate that improves length generalization without retraining. | [[arXiv]](https://arxiv.org/abs/2509.26645) [[GitHub]](https://github.com/Inception3D/TTT3R) |
-| LiDAR-VGGT | 2025 | Coarse-to-fine fusion of LiDAR-inertial odometry with VGGT using scale-aware RANSAC and cross-modal Sim(3) registration for metric, globally consistent colored point clouds. | [[arXiv]](https://arxiv.org/abs/2511.01186) [[GitHub]](https://github.com/NorwegianSmokedSalmon/LiDAR-VGGT) |
-| AMB3R | 2025 | Feed-forward metric-scale multi-view reconstruction with a sparse, compact volumetric back-end; extends to visual odometry and SfM without task-specific training. | [[arXiv]](https://arxiv.org/abs/2511.20343) [[GitHub]](https://github.com/HengyiWang/amb3r) |
-| InfiniteVGGT | 2026 | Streaming VGGT variant with a bounded, adaptively pruned KV cache for unbounded-length sequences; introduces the Long3D benchmark of roughly 10,000-frame sequences. | [[arXiv]](https://arxiv.org/abs/2601.02281) [[GitHub]](https://github.com/AutoLab-SAI-SJTU/InfiniteVGGT) |
-| VGGT-SLAM 2.0 | 2026 | Real-time RGB SLAM on VGGT with a new factor graph design that reduces drift and reuses VGGT attention layers for loop closure verification. | [[arXiv]](https://arxiv.org/abs/2601.19887) |
-| LingBot-Map | 2026 | Streaming feed-forward 3D model using geometric context attention with an anchor context, a pose-reference window, and trajectory memory for sequences beyond 10,000 frames. | [[arXiv]](https://arxiv.org/abs/2604.14141) [[GitHub]](https://github.com/robbyant/lingbot-map) |
+| Analytical Derivatives of Rigid Body Dynamics Algorithms | 2018 | Derives exact, efficient derivatives of the recursive rigid-body algorithms, far faster than finite differences or automatic differentiation. | [[RSS]](https://doi.org/10.15607/RSS.2018.XIV.038) |
+| Pinocchio | 2019 | Fast C++ library for rigid-body kinematics and dynamics and their analytical derivatives, with Python bindings. | [[SII]](https://doi.org/10.1109/SII.2019.8700380) [[GitHub]](https://github.com/stack-of-tasks/pinocchio) |
+| Theseus | 2022 | Differentiable nonlinear least squares in PyTorch with Lie groups and differentiable forward kinematics. | [[arXiv]](https://arxiv.org/abs/2207.09442) [[GitHub]](https://github.com/facebookresearch/theseus) |
+| PyPose | 2023 | PyTorch library for Lie-group operations and second-order optimization in robotics. | [[arXiv]](https://arxiv.org/abs/2209.15428) [[GitHub]](https://github.com/pypose/pypose) |
+| cuRobo | 2023 | GPU-parallel kinematics, collision checking, and optimization that solves collision-free IK and motion generation in milliseconds. | [[arXiv]](https://arxiv.org/abs/2310.17274) [[GitHub]](https://github.com/NVlabs/curobo) |
+| Differentiable Robot Rendering | 2024 | Makes a robot's rendered appearance differentiable with respect to its joint angles, connecting image-space losses to kinematic control. | [[arXiv]](https://arxiv.org/abs/2410.13851) |
 
 ---
 
-### 💬 Semantic & Open-Vocabulary SLAM
+### 🕸 Parallel & Closed-Chain Mechanisms
 
-> **Semantic SLAM** attaches meaning to geometry: object instances, categories, rooms, and relationships. **Open-vocabulary** methods go further by embedding vision-language features in the map so robots can be queried with free-form text. This is where SLAM meets embodied AI and agent memory.
-
-#### 🪑 **Object-level & Metric-Semantic SLAM**
+> **Parallel robots** connect the end-effector to the base through several chains. Their inverse kinematics is usually trivial; their forward kinematics and singularity structure are among the hardest problems in the field.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| SLAM++ | 2013 | SLAM at the level of objects: recognizes known 3D objects and builds a pose graph of object instances. | [[CVPR]](https://doi.org/10.1109/CVPR.2013.178) |
-| SemanticFusion | 2017 | Fuses CNN semantic predictions from many viewpoints into a dense ElasticFusion surfel map. | [[arXiv]](https://arxiv.org/abs/1609.05130) [[GitHub]](https://github.com/seaun163/semanticfusion) |
-| Probabilistic Data Association for Semantic SLAM | 2017 | Jointly optimizes metric states and soft semantic data association with expectation maximization. | [[ICRA]](https://doi.org/10.1109/ICRA.2017.7989203) |
-| Fusion++ | 2018 | Volumetric object-level SLAM that builds a persistent pose graph of per-instance TSDF objects from Mask R-CNN detections. | [[arXiv]](https://arxiv.org/abs/1808.08378) |
-| QuadricSLAM | 2019 | Uses dual quadrics as 3D landmarks constrained directly by 2D object detections. | [[arXiv]](https://arxiv.org/abs/1804.04011) |
-| CubeSLAM | 2019 | Monocular 3D object detection and SLAM with cuboid landmarks optimized jointly with camera poses and points. | [[arXiv]](https://arxiv.org/abs/1806.00557) [[GitHub]](https://github.com/shichaoy/cube_slam) |
-| Voxblox++ | 2019 | Volumetric instance-aware semantic mapping with 3D object discovery from RGB-D. | [[arXiv]](https://arxiv.org/abs/1903.00268) [[GitHub]](https://github.com/ethz-asl/voxblox-plusplus) |
-| 3D Dynamic Scene Graphs | 2020 | Unifies places, objects, structures, rooms, and agents in a hierarchical spatio-temporal graph built automatically from sensor data. | [[arXiv]](https://arxiv.org/abs/2002.06289) |
-| Panoptic Multi-TSDFs | 2022 | Flexible panoptic submap representation for online multi-resolution volumetric mapping under long-term change. | [[arXiv]](https://arxiv.org/abs/2109.10165) [[GitHub]](https://github.com/ethz-asl/panoptic_mapping) |
-| Hydra | 2022 | Real-time spatial perception system that incrementally builds and optimizes hierarchical 3D scene graphs with loop closures. | [[arXiv]](https://arxiv.org/abs/2201.13360) [[GitHub]](https://github.com/MIT-SPARK/Hydra) |
-| SNI-SLAM | 2024 | Semantic neural implicit SLAM with cross-attention fusion of appearance, geometry, and semantic features. | [[arXiv]](https://arxiv.org/abs/2311.11016) |
-| Khronos | 2024 | Unified spatio-temporal metric-semantic SLAM that reasons about short-term dynamics and long-term changes in one framework. | [[arXiv]](https://arxiv.org/abs/2402.13817) [[GitHub]](https://github.com/MIT-SPARK/Khronos) |
-
-#### 🗣 **Open-Vocabulary Mapping & Scene Graphs**
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| NLMap | 2022 | Open-vocabulary queryable scene representations that ground LLM planners in what actually exists in the scene. | [[arXiv]](https://arxiv.org/abs/2209.09874) |
-| CLIP-Fields | 2022 | Weakly supervised semantic fields mapping 3D locations to CLIP and language embeddings for robotic memory and navigation. | [[arXiv]](https://arxiv.org/abs/2210.05663) [[GitHub]](https://github.com/notmahi/clip-fields) |
-| VLMaps | 2023 | Fuses pretrained visual-language features into a 3D reconstruction to build maps indexable by natural language for navigation. | [[arXiv]](https://arxiv.org/abs/2210.05714) [[GitHub]](https://github.com/vlmaps/vlmaps) |
-| OpenScene | 2023 | Co-embeds 3D points with text and image pixels in CLIP space for zero-shot open-vocabulary 3D scene understanding. | [[arXiv]](https://arxiv.org/abs/2211.15654) [[GitHub]](https://github.com/pengsongyou/openscene) |
-| ConceptFusion | 2023 | Open-set multimodal 3D mapping that fuses pixel-aligned foundation features into dense maps queryable by text, image, audio, and clicks. | [[arXiv]](https://arxiv.org/abs/2302.07241) [[GitHub]](https://github.com/concept-fusion/concept-fusion) |
-| LERF | 2023 | Language embedded radiance fields: grounds CLIP embeddings in NeRF for dense open-vocabulary 3D queries. | [[arXiv]](https://arxiv.org/abs/2303.09553) [[GitHub]](https://github.com/kerrj/lerf) |
-| OpenMask3D | 2023 | Open-vocabulary 3D instance segmentation by aggregating per-mask CLIP features across views. | [[arXiv]](https://arxiv.org/abs/2306.13631) [[GitHub]](https://github.com/OpenMask3D/openmask3d) |
-| SayPlan | 2023 | Grounds LLM task planning in large 3D scene graphs through semantic search and iterative replanning. | [[arXiv]](https://arxiv.org/abs/2307.06135) |
-| ConceptGraphs | 2023 | Open-vocabulary 3D scene graphs built from 2D foundation models, with LLM-inferred object relations for perception and planning. | [[arXiv]](https://arxiv.org/abs/2309.16650) [[GitHub]](https://github.com/concept-graphs/concept-graphs) |
-| OpenFusion | 2023 | Real-time open-vocabulary 3D mapping and queryable scene representation using region-level vision-language features and TSDF fusion. | [[arXiv]](https://arxiv.org/abs/2310.03923) [[GitHub]](https://github.com/UARK-AICV/OpenFusion) |
-| LangSplat | 2024 | 3D language Gaussian Splatting: attaches compressed CLIP features to Gaussians for fast open-vocabulary queries. | [[arXiv]](https://arxiv.org/abs/2312.16084) [[GitHub]](https://github.com/minghanqin/LangSplat) |
-| OK-Robot | 2024 | Integrates open-knowledge models (VLMaps-style memory, grasping, navigation) into a working pick-and-drop system for homes. | [[arXiv]](https://arxiv.org/abs/2401.12202) [[GitHub]](https://github.com/ok-robot/ok-robot) |
-| HOV-SG | 2024 | Hierarchical open-vocabulary 3D scene graphs (floors, rooms, objects) for language-grounded navigation in multi-story buildings. | [[arXiv]](https://arxiv.org/abs/2403.17846) [[GitHub]](https://github.com/hovsg/HOV-SG) |
-| Clio | 2024 | Real-time task-driven open-set 3D scene graphs that keep only the objects and places relevant to the robot's tasks, via the information bottleneck. | [[arXiv]](https://arxiv.org/abs/2404.13696) [[GitHub]](https://github.com/MIT-SPARK/Clio) |
-| ReMEmbR | 2024 | Builds long-horizon spatio-temporal memory from robot video so an LLM agent can answer where and when questions for navigation. | [[arXiv]](https://arxiv.org/abs/2409.13682) [[GitHub]](https://github.com/NVIDIA-AI-IOT/remembr) |
-| DynaMem | 2024 | Online dynamic spatio-semantic memory that adds and removes points as the scene changes, for open-world mobile manipulation. | [[arXiv]](https://arxiv.org/abs/2411.04999) |
-| OpenFunGraph | 2025 | Builds functional 3D scene graphs from posed RGB-D, representing objects, interactive elements, and their functional relationships using VLMs and LLMs. | [[arXiv]](https://arxiv.org/abs/2503.19199) [[Website]](https://openfungraph.github.io) |
-| RayFronts | 2025 | Unified open-set representation combining dense in-range semantic voxels with beyond-range semantic ray frontiers for online mapping and exploration. | [[arXiv]](https://arxiv.org/abs/2504.06994) [[GitHub]](https://github.com/RayFronts/RayFronts) |
-| DualMap | 2025 | Online open-vocabulary mapping with a global abstract map for candidate selection and a local concrete map for navigation in changing scenes. | [[arXiv]](https://arxiv.org/abs/2506.01950) [[GitHub]](https://github.com/Eku127/DualMap) |
-| KM-ViPE | 2025 | Online open-vocabulary SLAM on uncalibrated monocular RGB, coupling DINO features with geometric constraints through adaptive robust kernels to handle dynamic scenes. | [[arXiv]](https://arxiv.org/abs/2512.01889) [[GitHub]](https://github.com/be2rlab/km-vipe) |
+| A Platform with Six Degrees of Freedom | 1965 | Proposes the six-legged parallel platform for flight simulation that, with Gough's earlier tire-testing machine, gave the Gough-Stewart platform its name. | [[IMechE]](https://doi.org/10.1243/PIME_PROC_1965_180_029_02) |
+| The Stewart Platform of General Geometry Has 40 Configurations | 1993 | Shows numerically that the forward kinematics of the general Gough-Stewart platform has 40 solutions in the complex domain. | [[JMD]](https://doi.org/10.1115/1.2919188) |
+| An Algorithm for Solving the Direct Kinematics of General Stewart-Gough Platforms | 1996 | Derives the 40th-degree univariate polynomial for the forward kinematics using kinematic mapping. | [[MMT]](https://doi.org/10.1016/0094-114X%2895%2900091-C) |
+| The Stewart-Gough Platform of General Geometry Can Have 40 Real Postures | 1998 | Constructs a platform geometry for which all 40 forward kinematic solutions are real. | [[Springer]](https://doi.org/10.1007/978-94-015-9064-8_1) |
+| Constraint Singularities of Parallel Mechanisms | 2002 | Identifies a class of singularities in lower-mobility parallel mechanisms where the platform gains unwanted degrees of freedom. | [[ICRA]](https://espace2.etsmtl.ca/id/eprint/9908/) |
+| Parallel Robots | 2006 | The reference monograph on parallel robot architectures, kinematics, singularities, workspace, and calibration. | [[Springer]](https://doi.org/10.1007/1-4020-4133-0) |
 
 ---
 
-### 💾 SLAM with Memory
+### 🚗 Mobile Robot Kinematics
 
-> **SLAM with Memory** covers systems where memory is an explicit design element rather than a side effect of mapping: what to store, what to keep in the active set, what to forget, and how to recall it later. A map *is* a robot's memory of space, and long-running robots and embodied agents need that memory to stay bounded, current, and queryable.
-
-The same lens used in [MemoryIsAwesome](https://github.com/SuperMadee/MemoryIsAwesome) applies directly to SLAM:
-
-| Memory Lens | In SLAM | Examples |
-|-------------|---------|----------|
-| **Formation (Writing)** | Deciding what enters the map: keyframe selection, landmark creation, feature fusion | Keyframe insertion in ORB-SLAM, memory snapshots in 3D-Mem |
-| **Evolution (Management)** | Keeping the map bounded and current: pruning, marginalization, consolidation, forgetting, change handling | Working vs. long-term memory in RTAB-Map, graph pruning, ephemerality in ELite |
-| **Retrieval (Reading)** | Recalling the right part of the map: place recognition, relocalization, spatial and language queries | Loop closure, experience selection, retrieval over a semantic forest in Embodied-RAG |
-| **Token-level form** | Explicit, inspectable maps | Keyframes, point clouds, scene graphs, captions attached to places |
-| **Parametric form** | The map lives in network weights | iMAP, continual-learning SLAM |
-| **Latent form** | The map lives in a recurrent state, feature tokens, or a KV cache | CUT3R, StreamVGGT, Neural Map |
-
-#### 🗄 **Memory Management & Lifelong Maps**
-
-> **Lifelong mapping** asks how a map survives weeks of operation in a changing world. These works bound memory and computation, handle change between sessions, and avoid forgetting places already learned.
+> **Mobile robot kinematics** is governed by rolling constraints. Because a wheel cannot slip sideways, the robot can reach any pose in the plane but cannot move in every direction at every instant.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| RTAB-Map Memory Management | 2013 | Keeps only recent and frequently observed locations in working memory for loop closure detection and transfers the rest to long-term memory, bounding online processing time. | [[T-RO]](https://doi.org/10.1109/TRO.2013.2242375) [[GitHub]](https://github.com/introlab/rtabmap) |
-| Experience-based Navigation | 2013 | Stores multiple visual "experiences" of the same place under different conditions and localizes against whichever stored experiences match the live view. | [[IJRR]](https://doi.org/10.1177/0278364913499193) |
-| Geometry-based Graph Pruning | 2021 | Removes vertices and edges to keep the pose graph size reasonable while preserving needed information, with marginalization robust to wrong loop closures. | [[arXiv]](https://arxiv.org/abs/2110.01286) |
-| General Lifelong SLAM Framework | 2021 | Multi-session framework that bounds memory growth by trimming the map with a Chow-Liu maximum-mutual-information spanning tree. | [[arXiv]](https://arxiv.org/abs/2111.10946) |
-| LT-mapper | 2021 | Modular multi-session LiDAR framework that separates changed objects from the map and manages changes while keeping memory and computation costs low. | [[arXiv]](https://arxiv.org/abs/2107.07712) [[GitHub]](https://github.com/gisbi-kim/lt-mapper) |
-| Continual SLAM | 2022 | Dual-network architecture that adapts online to new environments while retaining knowledge of previously visited ones. | [[arXiv]](https://arxiv.org/abs/2203.01578) |
-| BioSLAM | 2022 | Gated generative replay with a dual memory for lifelong place recognition: a dynamic memory learns new observations and a static memory balances new and old knowledge. | [[arXiv]](https://arxiv.org/abs/2208.14543) |
-| POV-SLAM | 2023 | Object-aware SLAM for slowly changing scenes using variational expectation-maximization over factor graphs with a bimodal likelihood for potentially moved objects. | [[arXiv]](https://arxiv.org/abs/2307.00488) |
-| Lost & Found | 2024 | Tracks object interactions from egocentric observations and applies the changes online to a transformable 3D scene graph. | [[arXiv]](https://arxiv.org/abs/2411.19162) |
-| ELite | 2025 | Models each map point's transiency at two time scales (two-stage ephemerality) to maintain a reliable, up-to-date static LiDAR map. | [[arXiv]](https://arxiv.org/abs/2502.13452) [[GitHub]](https://github.com/dongjae0107/ELite) |
-
-#### 🧬 **Bio-inspired & Learned Map Memory**
-
-> **Learned map memory** replaces the hand-built map with a memory the agent learns to write and read, from hippocampus-inspired attractor networks to differentiable spatial memories trained end-to-end for navigation.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| RatSLAM | 2004 | Hippocampus-inspired SLAM that represents pose in a competitive attractor network of pose cells associated with local view cells. | [[ICRA]](https://doi.org/10.1109/ROBOT.2004.1307183) |
-| Neural Map | 2017 | Spatially structured 2D memory with a learned write operator that stores environment information over long time lags for a deep RL agent. | [[arXiv]](https://arxiv.org/abs/1702.08360) |
-| Cognitive Mapping and Planning | 2017 | Accumulates first-person observations into a latent top-down belief map that a differentiable planner uses to act in partially observed environments. | [[arXiv]](https://arxiv.org/abs/1702.03920) |
-| Neural SLAM | 2017 | Embeds SLAM-like procedures into soft-attention addressing of an external memory that serves as the agent's internal representation of the environment. | [[arXiv]](https://arxiv.org/abs/1706.09520) |
-| MapNet | 2018 | Allocentric spatial memory that is updated dynamically while localization and registration are performed with paired convolution and deconvolution operations. | [[CVPR]](https://openaccess.thecvf.com/content_cvpr_2018/html/Henriques_MapNet_An_Allocentric_CVPR_2018_paper.html) |
-| SPTM | 2018 | Semi-parametric topological memory: a non-parametric graph of locations plus a deep network that retrieves graph nodes from observations. | [[arXiv]](https://arxiv.org/abs/1803.00653) |
-| Scene Memory Transformer | 2019 | Embeds every observation into a scene memory and attends over it to capture spatio-temporal dependencies for long-horizon decisions. | [[arXiv]](https://arxiv.org/abs/1903.03878) |
-| Active Neural SLAM | 2020 | Modular exploration system whose learned Neural SLAM module builds the map and pose estimate used by global and local policies. | [[arXiv]](https://arxiv.org/abs/2004.05155) [[GitHub]](https://github.com/devendrachaplot/Neural-SLAM) |
-| Neural Topological SLAM | 2020 | Builds and maintains a topological map whose nodes carry semantic features and are connected using coarse geometric information. | [[arXiv]](https://arxiv.org/abs/2005.12256) |
-| Semantic MapNet | 2020 | Spatial memory tensor that accumulates projected egocentric features into an allocentric representation decoded into semantic maps. | [[arXiv]](https://arxiv.org/abs/2010.01191) |
-
-#### 🔁 **Memory in Streaming Feed-Forward Reconstruction**
-
-> **Streaming feed-forward models** carry the scene in a learned memory instead of an optimized map. Their central problem is a memory problem: how to keep long sequences consistent without the state growing without bound or drifting.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| LONG3R | 2025 | 3D spatio-temporal memory that prunes redundant spatial information and adapts resolution, plus a memory gating mechanism that filters relevant memory. | [[arXiv]](https://arxiv.org/abs/2507.18255) |
-| STAC | 2026 | Plug-and-play cache compression that keeps long-term informative tokens by decayed cumulative attention and compresses redundant tokens into voxel-aligned representations. | [[arXiv]](https://arxiv.org/abs/2603.20284) |
-| RetrieveVGGT | 2026 | Training-free retrieval of a fixed number of relevant history frames per step, organized by a pose-aware spatial memory. | [[arXiv]](https://arxiv.org/abs/2605.09644) [[GitHub]](https://github.com/zzctmd/RetrieveVGGT) |
-
-Systems listed under [Feed-Forward & Foundation Model SLAM](#-feed-forward--foundation-model-slam), by memory mechanism:
-
-| System | Memory Mechanism |
-|--------|------------------|
-| Spann3R | External spatial memory of past pointmap features, queried for each new frame |
-| CUT3R | Persistent recurrent state that is read and updated online |
-| TTT3R | Confidence-based update rate for that state, treating reconstruction as online learning |
-| MUSt3R | Multi-layer memory that lets new views attend to previously processed ones |
-| Point3R | Explicit pointer memory anchored at 3D positions |
-| StreamVGGT | Cached token memory with causal attention |
-| InfiniteVGGT | Bounded, adaptively pruned KV cache for unbounded streams |
-| LingBot-Map | Anchor context, pose-reference window, and trajectory memory |
-
-#### 🤖 **Spatial Memory for Embodied Agents**
-
-> **Spatial memory for agents** treats the map as the long-term memory a language model or policy reads from and writes to. See also CLIP-Fields, ReMEmbR, DynaMem, ConceptGraphs, and Clio under [Semantic & Open-Vocabulary SLAM](#-semantic--open-vocabulary-slam), and Khronos for spatio-temporal maps.
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| GOAT | 2023 | Continually augmented instance-aware semantic memory storing object appearance from multiple viewpoints alongside category-level semantics for lifelong multimodal goal navigation. | [[arXiv]](https://arxiv.org/abs/2311.06430) |
-| Mobility VLA | 2024 | A long-context VLM finds the goal frame in a previously recorded tour video, and a topological graph built offline from the tour drives low-level actions. | [[arXiv]](https://arxiv.org/abs/2407.07775) |
-| KARMA | 2024 | Long-term memory holds a 3D scene graph while short-term memory records changes in object positions and states for LLM planning. | [[arXiv]](https://arxiv.org/abs/2409.14908) [[GitHub]](https://github.com/WZX0Swarm0Robotics/KARMA) |
-| Embodied-RAG | 2024 | Non-parametric memory organized as a semantic forest storing language descriptions at multiple levels of detail for hierarchical retrieval in navigation and dialogue. | [[arXiv]](https://arxiv.org/abs/2409.18313) [[GitHub]](https://github.com/quanting-xie/Embodied_RAG) |
-| 3D-Mem | 2024 | Represents explored regions as multi-view memory snapshots and unexplored regions as frontier snapshots, with incremental construction and retrieval for VLM agents. | [[arXiv]](https://arxiv.org/abs/2411.17735) [[GitHub]](https://github.com/UMass-Embodied-AGI/3D-Mem) |
-| Embodied VideoAgent | 2025 | Builds persistent scene memory from egocentric video with depth and pose, with a VLM updating the memory when object actions are perceived. | [[arXiv]](https://arxiv.org/abs/2501.00358) [[GitHub]](https://github.com/Embodied-VideoAgent/embodied-videoagent) |
-| MapNav | 2025 | Replaces stored historical frames with an annotated semantic map: a top-down map updated each timestep with text labels on key regions. | [[arXiv]](https://arxiv.org/abs/2502.13451) |
-| Mem2Ego | 2025 | Adaptively retrieves task-relevant cues from a global memory module and integrates them with the agent's egocentric observations for VLM navigation. | [[arXiv]](https://arxiv.org/abs/2502.14254) |
-| 3DLLM-Mem | 2025 | Working-memory tokens for current observations query and fuse the most useful spatial and temporal features from an episodic memory of past observations. | [[arXiv]](https://arxiv.org/abs/2505.22657) |
-| Mem4Nav | 2025 | Fuses a sparse octree for voxel indexing with a semantic topology graph, stored in trainable long-term memory tokens, plus a short-term cache. | [[arXiv]](https://arxiv.org/abs/2506.19433) |
-| MTU3D | 2025 | Online query-based representation learning builds spatial memory directly from RGB-D frames, without explicit 3D reconstruction, for grounding and exploration. | [[arXiv]](https://arxiv.org/abs/2507.04047) [[GitHub]](https://github.com/MTU3D/MTU3D) |
-| RoboMemory | 2025 | Brain-inspired framework integrating spatial, temporal, episodic, and semantic memory, with a dynamic spatial knowledge graph for consistent memory updates. | [[arXiv]](https://arxiv.org/abs/2508.01415) |
-| Meta-Memory | 2025 | LLM-driven agent that builds a dense memory of the environment and retrieves memories by joint reasoning over semantic and spatial modalities. | [[arXiv]](https://arxiv.org/abs/2509.20754) |
-| JanusVLN | 2025 | Dual implicit memory built from historical key-value caches of the spatial-geometric and visual-semantic encoders, kept as compact fixed-size representations. | [[arXiv]](https://arxiv.org/abs/2509.22548) |
+| Dubins Curves | 1957 | Proves that the shortest path for a forward-only vehicle with bounded curvature consists of circular arcs and straight segments. | [[AJM]](https://doi.org/10.2307/2372560) |
+| Kinematic Modeling of Wheeled Mobile Robots | 1987 | Systematic methodology for modeling wheeled robots with conventional, omnidirectional, and ball wheels. | [[JRS]](https://doi.org/10.1002/rob.4620040209) |
+| Reeds-Shepp Curves | 1990 | Extends Dubins' result to a car that can also reverse, characterizing the shortest paths with cusps. | [[PJM]](https://doi.org/10.2140/pjm.1990.145.367) |
+| A Stable Tracking Control Method for an Autonomous Mobile Robot | 1990 | Classic kinematic trajectory-tracking law for unicycle-type robots with a Lyapunov stability proof. | [[ICRA]](https://doi.org/10.1109/ROBOT.1990.126006) |
+| Pure Pursuit | 1992 | Geometric path tracker that steers along the arc joining the vehicle to a look-ahead point on the path. | [[Report]](https://www.ri.cmu.edu/publications/implementation-of-the-pure-pursuit-path-tracking-algorithm/) |
+| Nonholonomic Motion Planning: Steering Using Sinusoids | 1993 | Steers nonholonomic systems in chained form using sinusoidal inputs, linking wheeled-robot kinematics to geometric control. | [[TAC]](https://doi.org/10.1109/9.277235) |
+| Structural Properties and Classification of Wheeled Mobile Robots | 1996 | Classifies all wheeled mobile robots into five types by their degrees of mobility and steerability. | [[TRA]](https://doi.org/10.1109/70.481750) |
+| Kinematic and Dynamic Vehicle Models for Autonomous Driving | 2015 | Compares kinematic and dynamic bicycle models for model predictive control and shows when the kinematic one suffices. | [[IV]](https://doi.org/10.1109/IVS.2015.7225830) |
+| The Kinematic Bicycle Model: A Consistent Model for Planning? | 2017 | Quantifies the lateral-acceleration range within which the kinematic bicycle model remains valid for trajectory planning. | [[IV]](https://doi.org/10.1109/IVS.2017.7995816) |
 
 ---
 
-### 🏃 Dynamic SLAM
+### 🦿 Legged & Humanoid Whole-Body Kinematics
 
-> **Dynamic SLAM** drops the static-world assumption. Systems either *filter out* moving objects to protect the estimator, or *model* them explicitly by tracking object motion alongside the camera.
+> **Whole-body kinematics** treats a legged robot as a tree attached to a free-floating base. Balance, foot contacts, hand goals, and joint limits all compete for the same joints, so the problem is to satisfy many tasks at once.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| Co-Fusion | 2017 | Real-time segmentation, tracking, and fusion of multiple independently moving objects into separate surfel models. | [[arXiv]](https://arxiv.org/abs/1706.06629) [[GitHub]](https://github.com/martinruenz/co-fusion) |
-| DynaSLAM | 2018 | Adds Mask R-CNN and multi-view geometry to ORB-SLAM2 to detect dynamic objects and inpaint the occluded static background. | [[arXiv]](https://arxiv.org/abs/1806.05620) [[GitHub]](https://github.com/BertaBescos/DynaSLAM) |
-| MaskFusion | 2018 | Real-time recognition, tracking, and reconstruction of multiple moving objects using instance segmentation. | [[arXiv]](https://arxiv.org/abs/1804.09194) [[GitHub]](https://github.com/martinruenz/maskfusion) |
-| DS-SLAM | 2018 | Semantic visual SLAM for dynamic environments combining a segmentation network with a moving consistency check. | [[arXiv]](https://arxiv.org/abs/1809.08379) [[GitHub]](https://github.com/ivipsourcecode/DS-SLAM) |
-| MID-Fusion | 2019 | Octree-based object-level multi-instance dynamic SLAM tracking camera and object poses jointly. | [[arXiv]](https://arxiv.org/abs/1812.07976) |
-| ReFusion | 2019 | 3D reconstruction in dynamic environments for RGB-D cameras exploiting TSDF registration residuals to reject dynamics. | [[arXiv]](https://arxiv.org/abs/1905.02082) [[GitHub]](https://github.com/PRBonn/refusion) |
-| FlowFusion | 2020 | Dynamic dense RGB-D SLAM that uses optical flow residuals to segment and remove moving regions. | [[arXiv]](https://arxiv.org/abs/2003.05102) |
-| ClusterVO | 2020 | Clusters moving instances and estimates visual odometry for the camera and surrounding objects together. | [[arXiv]](https://arxiv.org/abs/2003.12980) |
-| VDO-SLAM | 2020 | Visual dynamic object-aware SLAM that estimates SE(3) motions of rigid objects without prior shape models. | [[arXiv]](https://arxiv.org/abs/2005.11052) [[GitHub]](https://github.com/halajun/VDO_SLAM) |
-| Removert | 2020 | Remove, then revert: static LiDAR map construction via multiresolution range image comparison. | [[GitHub]](https://github.com/irapkaist/removert) |
-| DynaSLAM II | 2021 | Tightly coupled multi-object tracking and SLAM, optimizing camera, static structure, and object trajectories in one bundle adjustment. | [[arXiv]](https://arxiv.org/abs/2010.07820) |
-| ERASOR | 2021 | Egocentric ratio of pseudo occupancy for removing dynamic object traces from 3D LiDAR maps. | [[arXiv]](https://arxiv.org/abs/2103.04316) [[GitHub]](https://github.com/LimHyungTae/ERASOR) |
-| LiDAR-MOS | 2021 | Moving object segmentation in 3D LiDAR data from sequential range images with residual inputs. | [[arXiv]](https://arxiv.org/abs/2105.08971) [[GitHub]](https://github.com/PRBonn/LiDAR-MOS) |
-| RoDyn-SLAM | 2024 | Robust dynamic dense RGB-D SLAM with neural radiance fields using motion masks and divide-and-conquer pose optimization. | [[arXiv]](https://arxiv.org/abs/2407.01303) |
-| DynoSAM | 2025 | Open-source smoothing and mapping framework for dynamic SLAM with object-centric factor graph formulations. | [[arXiv]](https://arxiv.org/abs/2501.11893) [[GitHub]](https://github.com/ACFR-RPG/DynoSAM) |
-| BA-Track | 2025 | Uses a 3D point tracker to separate camera-induced motion from object motion so bundle adjustment can use all scene points, with depth refinement. | [[arXiv]](https://arxiv.org/abs/2504.14516) |
-| 4DTAM | 2025 | Joint camera localization and non-rigid surface reconstruction by differentiable rendering of Gaussian surface primitives with an MLP warp field; adds a synthetic 4D SLAM dataset. | [[arXiv]](https://arxiv.org/abs/2505.22859) |
-| Pi3MOS-SLAM | 2025 | Monocular SLAM for dynamic scenes combining patch-based bundle adjustment with a feed-forward reconstruction model that filters moving regions and supplies depth. | [[arXiv]](https://arxiv.org/abs/2512.06868) [[GitHub]](https://github.com/PRBonn/Pi3MOS-SLAM) |
+| Resolved Momentum Control | 2003 | Generates humanoid whole-body motion by specifying desired linear and angular momentum and resolving it into joint velocities. | [[IROS]](https://doi.org/10.1109/IROS.2003.1248880) |
+| Synthesis of Whole-Body Behaviors | 2005 | Composes prioritized behavioral primitives for humanoids through recursive null-space projections. | [[IJHR]](https://doi.org/10.1142/S0219843605000594) |
+| Stack of Tasks | 2009 | Software framework implementing generalized inverted kinematics with a prioritized, reconfigurable task stack for humanoids. | [[ICAR]](https://ieeexplore.ieee.org/document/5174677) [[GitHub]](https://github.com/stack-of-tasks/sot-core) |
+| State Estimation for Legged Robots | 2012 | Fuses leg forward kinematics with inertial measurements in an EKF to estimate base pose without assumptions on terrain. | [[RSS]](https://doi.org/10.15607/RSS.2012.VIII.003) |
+| Centroidal Dynamics of a Humanoid Robot | 2013 | Defines the centroidal momentum matrix that maps joint velocities to whole-body momentum. | [[AURO]](https://doi.org/10.1007/s10514-013-9341-4) |
+| Whole-Body Motion Planning with Centroidal Dynamics and Full Kinematics | 2014 | Combines a simple dynamics model with the full kinematic model to plan dynamic humanoid motions. | [[Humanoids]](https://doi.org/10.1109/HUMANOIDS.2014.7041375) |
+| Contact-Aided Invariant EKF | 2020 | Uses Lie-group symmetry and leg kinematics with contact for a legged state estimator with improved convergence. | [[arXiv]](https://arxiv.org/abs/1904.09251) [[GitHub]](https://github.com/RossHartley/invariant-ekf) |
 
 ---
 
-### 🤖 Multi-Robot & Collaborative SLAM
+### 🕺 Motion Retargeting
 
-> **Collaborative SLAM** lets several robots build one consistent map. The key challenges are inter-robot loop closure with unknown initial poses, limited communication bandwidth, and robustness to false data associations.
+> **Motion retargeting** transfers a motion from one body to another with different proportions or structure. It is inverse kinematics with a moving, whole-body target, and it is now the main source of reference motion for humanoid and dexterous-hand learning.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| Distributed Mapper | 2017 | Distributed pose graph optimization with privacy and communication constraints using distributed Gauss-Seidel. | [[arXiv]](https://arxiv.org/abs/1702.03435) [[GitHub]](https://github.com/CogRob/distributed-mapper) |
-| maplab | 2018 | Open framework for visual-inertial mapping and localization with multi-session map merging and management. | [[arXiv]](https://arxiv.org/abs/1711.10250) [[GitHub]](https://github.com/ethz-asl/maplab) |
-| CCM-SLAM | 2019 | Centralized collaborative monocular SLAM for robot teams with a server handling map fusion and global optimization. | [[JFR]](https://doi.org/10.1002/rob.21854) [[GitHub]](https://github.com/VIS4ROB-lab/ccm_slam) |
-| DOOR-SLAM | 2020 | Distributed, online, and outlier-resilient SLAM for robotic teams with pairwise consistency maximization. | [[arXiv]](https://arxiv.org/abs/1909.12198) [[GitHub]](https://github.com/MISTLab/DOOR-SLAM) |
-| LAMP | 2020 | Large-scale autonomous mapping and positioning for multi-robot exploration of perceptually degraded subterranean environments. | [[arXiv]](https://arxiv.org/abs/2003.01744) |
-| DPGO | 2021 | Distributed certifiably correct pose graph optimization via Riemannian block coordinate descent. | [[arXiv]](https://arxiv.org/abs/1911.03721) [[GitHub]](https://github.com/mit-acl/dpgo) |
-| COVINS | 2021 | Visual-inertial SLAM for centralized collaboration, scaling to a dozen agents with a redundancy-aware back-end. | [[arXiv]](https://arxiv.org/abs/2108.05756) [[GitHub]](https://github.com/VIS4ROB-lab/covins) |
-| Kimera-Multi | 2022 | Robust, distributed, dense metric-semantic SLAM for multi-robot systems using distributed graduated non-convexity. | [[arXiv]](https://arxiv.org/abs/2106.14386) [[GitHub]](https://github.com/MIT-SPARK/Kimera-Multi) |
-| LAMP 2.0 | 2022 | Robust multi-robot SLAM for underground environments with scalable loop closure prioritization and outlier-robust back-end. | [[arXiv]](https://arxiv.org/abs/2205.13135) [[GitHub]](https://github.com/NeBula-Autonomy/LAMP) |
-| DCL-SLAM | 2022 | Distributed collaborative LiDAR SLAM framework for robotic swarms using lightweight global descriptors and peer-to-peer communication. | [[arXiv]](https://arxiv.org/abs/2210.11978) [[GitHub]](https://github.com/PengYu-Team/DCL-SLAM) |
-| D²SLAM | 2022 | Decentralized and distributed collaborative visual-inertial SLAM for aerial swarms with near-field and far-field estimation. | [[arXiv]](https://arxiv.org/abs/2211.01538) [[GitHub]](https://github.com/HKUST-Aerial-Robotics/D2SLAM) |
-| maplab 2.0 | 2022 | Modular, multi-modal, multi-robot mapping framework supporting heterogeneous sensors and learned features. | [[arXiv]](https://arxiv.org/abs/2212.00654) [[GitHub]](https://github.com/ethz-asl/maplab) |
-| Swarm-SLAM | 2023 | Sparse decentralized collaborative SLAM framework for multi-robot systems, supporting LiDAR, stereo, and RGB-D with budgeted inter-robot loop closure. | [[arXiv]](https://arxiv.org/abs/2301.06230) [[GitHub]](https://github.com/MISTLab/Swarm-SLAM) |
-| COVINS-G | 2023 | Generic back-end for collaborative visual-inertial SLAM that works with any VIO front-end using multi-camera relative pose. | [[arXiv]](https://arxiv.org/abs/2301.07147) [[GitHub]](https://github.com/VIS4ROB-lab/covins) |
-| Hydra-Multi | 2023 | Collaborative online construction of 3D scene graphs with multi-robot teams. | [[arXiv]](https://arxiv.org/abs/2304.13487) |
-| CP-SLAM | 2023 | Collaborative neural point-based SLAM with a unified front-end and back-end including loop closure and pose graph optimization. | [[arXiv]](https://arxiv.org/abs/2311.08013) |
-| MAGiC-SLAM | 2024 | Multi-agent Gaussian globally consistent SLAM with fast tracking, loop closure, and submap merging. | [[arXiv]](https://arxiv.org/abs/2411.16785) [[GitHub]](https://github.com/VladimirYugay/MAGiC-SLAM) |
-| Foundation-Model Loop Closing for CSLAM | 2026 | Uses 3D foundation models for inter-robot loop closure under large viewpoint change in decentralized collaborative SLAM, with outlier mitigation and pose graph optimization. | [[arXiv]](https://arxiv.org/abs/2602.02430) |
-| MAGiSt3R | 2026 | Multi-agent reconstruction and tracking from monocular RGB, merging feed-forward local pointmaps within and across agents with pose graph optimization. | [[arXiv]](https://arxiv.org/abs/2607.15211) [[Website]](https://zorangong.github.io/magist3r_page/) |
+| Retargetting Motion to New Characters | 1998 | Formulates retargeting as a spacetime constraint optimization that preserves key features of the original motion. | [[SIGGRAPH]](https://doi.org/10.1145/280814.280820) |
+| Neural Kinematic Networks | 2018 | Recurrent network with a differentiable forward kinematics layer trained without paired data to retarget motion between skeletons. | [[arXiv]](https://arxiv.org/abs/1804.05653) |
+| DexPilot | 2019 | Vision-based teleoperation that retargets a bare human hand to a dexterous robot hand with a fingertip-distance cost. | [[arXiv]](https://arxiv.org/abs/1910.03135) |
+| Skeleton-Aware Networks | 2020 | Skeletal convolution and pooling operators that retarget motion between skeletons with different structures (numbers of joints) without paired data. | [[arXiv]](https://arxiv.org/abs/2005.05732) |
+| HybrIK | 2021 | Hybrid analytical-neural inverse kinematics using twist-and-swing decomposition to recover body pose from 3D joints. | [[arXiv]](https://arxiv.org/abs/2011.14672) [[GitHub]](https://github.com/Jeff-sjtu/HybrIK) |
+| AnyTeleop | 2023 | General vision-based dexterous teleoperation system whose retargeting module supports many arm and hand models. | [[arXiv]](https://arxiv.org/abs/2307.04577) [[GitHub]](https://github.com/dexsuite/dex-retargeting) |
+| GMR | 2025 | General motion retargeting for humanoids that studies how retargeting quality affects downstream motion-tracking policies. | [[arXiv]](https://arxiv.org/abs/2510.02252) [[GitHub]](https://github.com/YanjieZe/GMR) |
 
 ---
 
-### 📍 Place Recognition & Loop Closure
+### 🐍 Continuum & Soft Robot Kinematics
 
-> **Place recognition** decides whether the robot has been here before. A correct loop closure removes accumulated drift; a wrong one can destroy the map, so retrieval is paired with geometric verification and robust back-ends.
-
-#### 📷 **Visual Place Recognition**
+> **Continuum robots** bend along their whole length. Their kinematics maps actuator inputs (tendon lengths, tube rotations, chamber pressures) to a backbone shape, and for soft or slender robots that shape depends on elasticity and external loads as well as geometry.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| FAB-MAP | 2008 | Probabilistic appearance-based localization and mapping using a generative bag-of-words model with a Chow-Liu tree. | [[IJRR]](https://doi.org/10.1177/0278364908090961) |
-| DBoW2 | 2012 | Bags of binary words for fast place recognition in image sequences; the loop closure engine in ORB-SLAM and VINS-Mono. | [[T-RO]](https://doi.org/10.1109/TRO.2012.2197158) [[GitHub]](https://github.com/dorian3d/DBoW2) |
-| SeqSLAM | 2012 | Matches sequences of images rather than single frames for route recognition across day, night, and seasons. | [[ICRA]](https://doi.org/10.1109/ICRA.2012.6224623) |
-| NetVLAD | 2016 | CNN architecture with a trainable VLAD layer for weakly supervised place recognition. | [[arXiv]](https://arxiv.org/abs/1511.07247) [[GitHub]](https://github.com/Relja/netvlad) |
-| Patch-NetVLAD | 2021 | Multi-scale fusion of locally-global descriptors for place recognition with spatial verification. | [[arXiv]](https://arxiv.org/abs/2103.01486) [[GitHub]](https://github.com/QVPR/Patch-NetVLAD) |
-| CosPlace | 2022 | Rethinks visual geo-localization for large-scale applications by casting training as classification. | [[arXiv]](https://arxiv.org/abs/2204.02287) [[GitHub]](https://github.com/gmberton/CosPlace) |
-| MixVPR | 2023 | Feature mixing with stacked MLP blocks for compact, strong global place descriptors. | [[arXiv]](https://arxiv.org/abs/2303.02190) [[GitHub]](https://github.com/amaralibey/MixVPR) |
-| AnyLoc | 2023 | Universal visual place recognition from off-the-shelf DINOv2 features with unsupervised aggregation, working across structured, aerial, and underwater domains. | [[arXiv]](https://arxiv.org/abs/2308.00688) [[GitHub]](https://github.com/AnyLoc/AnyLoc) |
-| EigenPlaces | 2023 | Trains viewpoint-robust place recognition models by grouping images of the same place seen from different angles. | [[arXiv]](https://arxiv.org/abs/2308.10832) [[GitHub]](https://github.com/gmberton/EigenPlaces) |
-| SALAD | 2024 | Optimal transport aggregation of DINOv2 local features for visual place recognition. | [[arXiv]](https://arxiv.org/abs/2311.15937) [[GitHub]](https://github.com/serizba/salad) |
-| BoQ | 2024 | Bag of learnable queries that probe local features with cross-attention to form a place descriptor. | [[arXiv]](https://arxiv.org/abs/2405.07364) [[GitHub]](https://github.com/amaralibey/Bag-of-Queries) |
-| MegaLoc | 2025 | A single image-retrieval model trained across multiple datasets that performs well on visual place recognition, landmark retrieval, and visual localization. | [[arXiv]](https://arxiv.org/abs/2502.17237) [[GitHub]](https://github.com/gmberton/MegaLoc) |
-
-#### 🔦 **LiDAR Place Recognition & Registration**
-
-| Paper | Year | Description | Links |
-|-------|------|-------------|-------|
-| PointNetVLAD | 2018 | Deep point cloud based retrieval for large-scale place recognition combining PointNet and NetVLAD. | [[arXiv]](https://arxiv.org/abs/1804.03492) [[GitHub]](https://github.com/mikacuy/pointnetvlad) |
-| Scan Context | 2018 | Egocentric polar spatial descriptor of a LiDAR scan enabling fast rotation-invariant loop detection. | [[IROS]](https://doi.org/10.1109/IROS.2018.8593953) [[GitHub]](https://github.com/gisbi-kim/scancontext) |
-| MinkLoc3D | 2021 | Point cloud place recognition using a sparse voxelized representation and sparse 3D convolutions. | [[arXiv]](https://arxiv.org/abs/2011.04530) [[GitHub]](https://github.com/jac99/MinkLoc3D) |
-| TEASER++ | 2021 | Fast and certifiable point cloud registration that tolerates extreme outlier rates. | [[arXiv]](https://arxiv.org/abs/2001.07715) [[GitHub]](https://github.com/MIT-SPARK/TEASER-plusplus) |
-| OverlapNet | 2020 | Predicts overlap and relative yaw between LiDAR range images for loop closing. | [[arXiv]](https://arxiv.org/abs/2105.11344) [[GitHub]](https://github.com/PRBonn/OverlapNet) |
-| LCDNet | 2022 | Deep loop closure detection and point cloud registration for LiDAR SLAM with an unbalanced optimal transport head. | [[arXiv]](https://arxiv.org/abs/2103.05056) [[GitHub]](https://github.com/robot-learning-freiburg/LCDNet) |
-| Scan Context++ | 2022 | Structural place recognition robust to both rotation and lateral translation in urban environments. | [[arXiv]](https://arxiv.org/abs/2109.13494) |
-| OverlapTransformer | 2022 | Efficient yaw-rotation-invariant transformer network for LiDAR-based place recognition. | [[arXiv]](https://arxiv.org/abs/2203.03397) [[GitHub]](https://github.com/haomo-ai/OverlapTransformer) |
-| STD | 2023 | Stable triangle descriptor for 3D place recognition, giving both loop detection and a relative pose estimate. | [[arXiv]](https://arxiv.org/abs/2209.12435) [[GitHub]](https://github.com/hku-mars/STD) |
-| KISS-Matcher | 2024 | Fast and robust global point cloud registration with a faster feature detector and graph-theoretic outlier pruning. | [[arXiv]](https://arxiv.org/abs/2409.15615) [[GitHub]](https://github.com/MIT-SPARK/KISS-Matcher) |
-| MapClosures | 2025 | LiDAR loop closure using bird's-eye-view density images of local maps with ORB features, working across scan patterns and platforms. | [[arXiv]](https://arxiv.org/abs/2501.07399) [[GitHub]](https://github.com/PRBonn/MapClosures) |
-| ForestLPR | 2025 | LiDAR place recognition for forests using BEV density images at multiple heights and a vision transformer with a multi-BEV interaction module. | [[arXiv]](https://arxiv.org/abs/2503.04475) |
-| ImLPR | 2025 | Converts LiDAR scans to three-channel range images and adapts pretrained DINOv2 with adapters and contrastive learning for LiDAR place recognition. | [[arXiv]](https://arxiv.org/abs/2505.18364) [[GitHub]](https://github.com/minwoo0611/ImLPR) |
+| A Modal Approach to Hyper-Redundant Manipulator Kinematics | 1994 | Describes a hyper-redundant arm by a backbone curve expressed in a small set of shape modes. | [[TRA]](https://doi.org/10.1109/70.294209) |
+| Kinematics of an Elephant's Trunk Manipulator | 2003 | Develops and experimentally validates constant-curvature section kinematics on a tendon-driven trunk robot. | [[JRS]](https://doi.org/10.1002/rob.10070) |
+| Kinematics for Multisection Continuum Robots | 2006 | Modular formulation of multisection constant-curvature kinematics that handles the straight-section singularity. | [[T-RO]](https://doi.org/10.1109/TRO.2005.861458) |
+| Design and Control of Concentric-Tube Robots | 2010 | Derives the kinematics of precurved concentric tubes including torsion and uses it for real-time position control. | [[T-RO]](https://doi.org/10.1109/TRO.2009.2035740) |
+| Geometrically Exact Model for Externally Loaded Concentric-Tube Robots | 2010 | Cosserat rod model predicting concentric-tube shape under external forces and moments. | [[T-RO]](https://doi.org/10.1109/TRO.2010.2062570) |
+| Constant Curvature Continuum Robots: A Review | 2010 | Unifies the constant-curvature literature into robot-specific and robot-independent kinematic mappings. | [[IJRR]](https://doi.org/10.1177/0278364910368147) |
+| Discrete Cosserat Approach for Multisection Soft Manipulator Dynamics | 2018 | Piecewise constant strain model that generalizes rigid-robot screw-theoretic recursion to soft manipulators. | [[T-RO]](https://doi.org/10.1109/TRO.2018.2868815) |
+| An Improved State Parametrization for Piecewise Constant Curvature | 2020 | Proposes a singularity-free parameterization for piecewise constant curvature soft robots suited to model-based control. | [[RA-L]](https://doi.org/10.1109/LRA.2020.2967269) |
+| Soft Robots Modeling: A Structured Overview | 2023 | Organizes soft robot models (continuum mechanics, geometric, discrete material, surrogate) in a common framework. | [[arXiv]](https://arxiv.org/abs/2112.03645) |
 
 ---
 
-### 🧮 Back-End Optimization & Robust Estimation
+### 🎯 Kinematic Calibration & Hand-Eye
 
-> **The back-end** turns measurements into estimates. Advances here (sparse incremental solvers, manifold optimization, certifiable and outlier-robust estimation) are what made large-scale real-time SLAM possible.
+> **Kinematic calibration** identifies the geometric parameters a real robot actually has. A robot is typically far more repeatable than it is accurate; calibration closes that gap, and hand-eye calibration ties the kinematic model to the robot's sensors.
+
+#### 📏 **Geometric Parameter Identification**
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| g2o | 2011 | General framework for graph optimization exploiting sparsity and manifold structure of SLAM and bundle adjustment problems. | [[ICRA]](https://doi.org/10.1109/ICRA.2011.5979949) [[GitHub]](https://github.com/RainerKuemmerle/g2o) |
-| iSAM2 | 2012 | Incremental smoothing and mapping using the Bayes tree, with fluid relinearization and incremental variable reordering. | [[IJRR]](https://doi.org/10.1177/0278364911430419) |
-| Factor Graphs for Robot Perception | 2017 | Monograph introducing factor graphs as the unifying modeling language for SLAM and the basis of GTSAM. | [[FnT]](https://doi.org/10.1561/2300000043) [[GitHub]](https://github.com/borglab/gtsam) |
-| SE-Sync | 2019 | Certifiably correct algorithm for synchronization over the special Euclidean group, recovering globally optimal pose graph solutions. | [[arXiv]](https://arxiv.org/abs/1612.07386) [[GitHub]](https://github.com/david-m-rosen/SE-Sync) |
-| Graduated Non-Convexity | 2020 | General-purpose robust estimation that anneals from a convex surrogate to a robust cost, rejecting outliers without an initial guess. | [[arXiv]](https://arxiv.org/abs/1909.08605) |
-| FutureMapping 2 | 2019 | Argues for Gaussian belief propagation on factor graphs as a distributed computation model for spatial AI. | [[arXiv]](https://arxiv.org/abs/1910.14139) |
-| Theseus | 2022 | Library for differentiable nonlinear optimization in PyTorch, for embedding SLAM-style solvers in learned models. | [[arXiv]](https://arxiv.org/abs/2207.09442) [[GitHub]](https://github.com/facebookresearch/theseus) |
-| PyPose | 2023 | PyTorch library for robot learning with physics-based optimization, including Lie group operations and second-order solvers. | [[arXiv]](https://arxiv.org/abs/2209.15428) [[GitHub]](https://github.com/pypose/pypose) |
+| Robot Arm Geometric Link Parameter Estimation | 1983 | Adds a rotation parameter for consecutive near-parallel axes, fixing the ill-conditioning of DH parameters in calibration. | [[CDC]](https://doi.org/10.1109/CDC.1983.269783) |
+| Optimal Measurement Configurations Based on Observability Measure | 1991 | Proposes an observability index for choosing the measurement configurations that best excite the parameter errors. | [[IJRR]](https://doi.org/10.1177/027836499101000106) |
+| Identifiable Parameters and Optimum Configurations | 1991 | Determines which geometric parameters are identifiable and how to select configurations that condition the problem well. | [[Robotica]](https://doi.org/10.1017/S0263574700015575) |
+| A Complete and Parametrically Continuous Kinematic Model | 1992 | Introduces the CPC model, in which small geometric changes always correspond to small parameter changes. | [[TRA]](https://doi.org/10.1109/70.149944) |
+| Kinematic Calibration Using the Product of Exponentials Formula | 1996 | Shows that the POE model gives a smooth, singularity-free parameterization for calibration. | [[Robotica]](https://doi.org/10.1017/S0263574700019810) |
+| The Calibration Index and Taxonomy | 1996 | Classifies calibration methods by the number of sensed and constrained degrees of freedom at the end-effector. | [[IJRR]](https://doi.org/10.1177/027836499601500604) |
+| Absolute Calibration of an ABB IRB 1600 Using a Laser Tracker | 2013 | Full geometric and compliance calibration of an industrial arm with reported accuracy before and after. | [[RCIM]](https://doi.org/10.1016/j.rcim.2012.06.004) |
+
+#### 👁 **Hand-Eye Calibration**
+
+| Paper | Year | Description | Links |
+|-------|------|-------------|-------|
+| Tsai-Lenz | 1989 | Efficient two-stage solution of the hand-eye equation AX = XB, rotation first and then translation. | [[TRA]](https://doi.org/10.1109/70.34770) |
+| Park-Martin | 1994 | Closed-form least-squares solution of AX = XB on the Euclidean group using Lie-group logarithms. | [[TRA]](https://doi.org/10.1109/70.326576) |
+| Daniilidis | 1999 | Solves rotation and translation simultaneously with dual quaternions and a singular value decomposition. | [[IJRR]](https://doi.org/10.1177/02783649922066213) |
 
 ---
 
-### ⚡ Radar & Event-based SLAM
+### 🌐 Workspace, Reachability & Dexterity
 
-> **Radar** sees through fog, dust, and rain and measures velocity directly. **Event cameras** respond in microseconds with extreme dynamic range. Both extend SLAM to conditions where frame cameras and LiDAR fail.
+> **Workspace analysis** asks where a robot can reach and how well it can move once there. The answers drive robot design, cell layout, base placement, and grasp selection.
 
 | Paper | Year | Description | Links |
 |-------|------|-------------|-------|
-| Ultimate SLAM | 2018 | Combines events, standard frames, and IMU for robust visual SLAM in high-dynamic-range and high-speed scenarios. | [[arXiv]](https://arxiv.org/abs/1709.06310) |
-| Event-based Vision: A Survey | 2020 | Comprehensive survey of event cameras covering sensing principles, algorithms, and applications including SLAM. | [[arXiv]](https://arxiv.org/abs/1904.08405) |
-| Under the Radar | 2020 | Learns to predict robust keypoints for odometry estimation and metric localization in radar. | [[arXiv]](https://arxiv.org/abs/2001.10789) |
-| RadarSLAM | 2020 | Full radar SLAM system with pose tracking, local mapping, and loop closure that works in all weather conditions. | [[arXiv]](https://arxiv.org/abs/2005.02198) |
-| ESVO | 2021 | Event-based stereo visual odometry with semi-dense mapping and 3D-2D tracking on time surfaces. | [[arXiv]](https://arxiv.org/abs/2007.15548) [[GitHub]](https://github.com/HKUST-Aerial-Robotics/ESVO) |
-| CFEAR Radarodometry | 2021 | Conservative filtering for efficient and accurate radar odometry using oriented surface points. | [[arXiv]](https://arxiv.org/abs/2105.01457) [[GitHub]](https://github.com/dan11003/CFEAR_Radarodometry) |
-| EDS | 2022 | Event-aided direct sparse odometry: a direct monocular VO using events and frames through an event generation model. | [[arXiv]](https://arxiv.org/abs/2204.07640) [[GitHub]](https://github.com/uzh-rpg/eds-buildconf) |
-| 4DRadarSLAM | 2023 | 4D imaging radar SLAM for large-scale environments based on pose graph optimization. | [[GitHub]](https://github.com/zhuge2333/4DRadarSLAM) |
-| DEVO | 2024 | Deep event visual odometry: a monocular event-only system trained in simulation that generalizes to real data. | [[arXiv]](https://arxiv.org/abs/2312.09800) [[GitHub]](https://github.com/tum-vision/DEVO) |
-| Doppler-SLAM | 2025 | Tightly coupled graph SLAM using Doppler velocity from 4D radar or FMCW LiDAR with an IMU, including Doppler-aided scan matching and online extrinsic calibration. | [[arXiv]](https://arxiv.org/abs/2504.11634) [[GitHub]](https://github.com/Wayne-DWA/Doppler-SLAM) |
-| DRO | 2025 | Direct SE(2) spinning-radar odometry that registers intensity data while accounting for motion and Doppler distortion. | [[arXiv]](https://arxiv.org/abs/2504.20339) [[GitHub]](https://github.com/utiasASRL/dro) |
-| Dr-PoGO | 2026 | Radar SLAM using direct registration for both odometry and loop closure, evaluated on over 300 km of automotive data. | [[arXiv]](https://arxiv.org/abs/2605.04806) [[GitHub]](https://github.com/utiasASRL/dr_pogo) |
-| AERO-VIS | 2026 | Stereo event-inertial SLAM that processes asynchronous events with a lightweight keypoint detector and runs onboard a UAV for closed-loop control. | [[arXiv]](https://arxiv.org/abs/2605.07885) [[GitHub]](https://github.com/ethz-mrl/AERO-VIS) |
+| The Workspaces of a Mechanical Manipulator | 1981 | Defines reachable and dexterous workspaces and studies how link geometry shapes them. | [[JMD]](https://doi.org/10.1115/1.3254968) |
+| Design Considerations for Manipulator Workspace | 1982 | Relates workspace shape, voids, and approach angles to the kinematic design of the arm and hand. | [[JMD]](https://doi.org/10.1115/1.3256412) |
+| A Global Performance Index for Kinematic Optimization | 1991 | Integrates the Jacobian condition number over the workspace into a single global conditioning index for design. | [[JMD]](https://doi.org/10.1115/1.2912772) |
+| Capturing Robot Workspace Structure | 2007 | Introduces the capability map, a discretized representation of the directions from which each workspace region can be reached. | [[IROS]](https://doi.org/10.1109/IROS.2007.4399105) |
+| Robot Placement Based on Reachability Inversion | 2013 | Inverts a reachability map to find base poses from which a target grasp is reachable. | [[ICRA]](https://doi.org/10.1109/ICRA.2013.6630839) |
+| Manipulator Performance Measures: A Comprehensive Literature Survey | 2015 | Surveys local and global kinematic performance indices and their limitations. | [[JINT]](https://doi.org/10.1007/s10846-014-0024-y) |
+| Reuleaux | 2018 | Open-source reachability-map generation and robot base placement for task sequences. | [[arXiv]](https://arxiv.org/abs/1710.01328) [[GitHub]](https://github.com/ros-industrial-attic/reuleaux) |
 
 ---
 
 ## 📊 Benchmarks & Evaluation
 
-### Datasets
+Kinematics has no single leaderboard comparable to those in perception. Evaluation rests on shared robot models, shared motion data, and a small set of standard measures.
 
-| Dataset | Year | Sensors | Environment | Links |
-|---------|------|---------|-------------|-------|
-| KITTI Odometry | 2012 | Stereo, LiDAR, GPS/IMU | Urban and highway driving | [[CVPR]](https://doi.org/10.1109/CVPR.2012.6248074) [[Website]](https://www.cvlibs.net/datasets/kitti/eval_odometry.php) |
-| TUM RGB-D | 2012 | RGB-D, motion capture | Indoor handheld and robot | [[IROS]](https://doi.org/10.1109/IROS.2012.6385773) [[Website]](https://cvg.cit.tum.de/data/datasets/rgbd-dataset) |
-| ICL-NUIM | 2014 | Synthetic RGB-D | Indoor rooms with ground-truth surfaces | [[ICRA]](https://doi.org/10.1109/ICRA.2014.6907054) |
-| EuRoC MAV | 2016 | Stereo, IMU, Vicon/laser tracker | Indoor drone flights | [[IJRR]](https://doi.org/10.1177/0278364915620033) |
-| NCLT | 2016 | LiDAR, omnidirectional camera, IMU, GPS | Long-term campus (15 months) | [[IJRR]](https://doi.org/10.1177/0278364915614638) |
-| Oxford RobotCar | 2017 | Cameras, LiDAR, GPS/INS | 1000 km of repeated urban driving | [[IJRR]](https://doi.org/10.1177/0278364916679498) |
-| ScanNet | 2017 | RGB-D | 1500+ annotated indoor scans | [[arXiv]](https://arxiv.org/abs/1702.04405) [[GitHub]](https://github.com/ScanNet/ScanNet) |
-| TUM VI | 2018 | Stereo fisheye, IMU | Indoor and outdoor handheld | [[arXiv]](https://arxiv.org/abs/1804.06120) |
-| Replica | 2019 | Synthetic RGB-D renders | Photorealistic indoor scenes; the standard neural SLAM benchmark | [[arXiv]](https://arxiv.org/abs/1906.05797) [[GitHub]](https://github.com/facebookresearch/Replica-Dataset) |
-| SemanticKITTI | 2019 | LiDAR with per-point labels | Urban driving | [[arXiv]](https://arxiv.org/abs/1904.01416) |
-| Oxford Radar RobotCar | 2020 | FMCW radar, LiDAR, cameras | Urban driving | [[arXiv]](https://arxiv.org/abs/1909.01300) |
-| TartanAir | 2020 | Synthetic stereo, depth, flow, LiDAR | Diverse simulated worlds with hard motion and weather | [[arXiv]](https://arxiv.org/abs/2003.14338) [[GitHub]](https://github.com/castacks/tartanair_tools) |
-| Newer College | 2020 | Handheld LiDAR, stereo-inertial | Campus with millimeter-accurate ground truth | [[arXiv]](https://arxiv.org/abs/2003.05691) |
-| 4Seasons | 2020 | Stereo, IMU, RTK-GNSS | Driving across seasons and weather | [[arXiv]](https://arxiv.org/abs/2009.06364) |
-| Hilti SLAM Challenge | 2021 | Multi-camera, LiDAR, IMU | Construction sites | [[arXiv]](https://arxiv.org/abs/2109.11316) |
-| KITTI-360 | 2022 | Fisheye and perspective cameras, LiDAR | Suburban driving with 2D/3D annotations | [[arXiv]](https://arxiv.org/abs/2109.13410) |
-| M2DGR | 2022 | Multi-camera, LiDAR, IMU, GNSS, event, thermal | Ground robot indoors and outdoors | [[arXiv]](https://arxiv.org/abs/2112.13659) [[GitHub]](https://github.com/SJTU-ViSYS/M2DGR) |
-| Boreas | 2023 | Radar, LiDAR, camera | Driving in adverse weather over a year | [[arXiv]](https://arxiv.org/abs/2203.10168) |
-| ScanNet++ | 2023 | Laser scans, DSLR, iPhone RGB-D | High-fidelity indoor scenes | [[arXiv]](https://arxiv.org/abs/2308.11417) |
-| SubT-MRS | 2024 | LiDAR, cameras, thermal, IMU | Multi-robot subterranean, all-weather | [[arXiv]](https://arxiv.org/abs/2307.07607) |
-| Oxford Spires | 2024 | LiDAR, cameras, IMU, TLS ground truth | Historic buildings; localization, reconstruction, and radiance fields | [[arXiv]](https://arxiv.org/abs/2411.10546) |
-| LaMAria | 2025 | Aria glasses: multi-camera, IMU | City-scale egocentric visual-inertial benchmark with surveyed control points | [[arXiv]](https://arxiv.org/abs/2509.26639) [[Website]](https://www.lamaria.ethz.ch) |
-| TartanGround | 2025 | Synthetic stereo RGB-D, LiDAR, semantic occupancy | 70 simulated environments for ground robots | [[arXiv]](https://arxiv.org/abs/2505.10696) |
-| M3DGR | 2025 | GNSS, RGB-D, LiDAR, IMU, wheel odometry | Ground robot with systematically induced sensor degradation | [[arXiv]](https://arxiv.org/abs/2507.08364) |
+### Robot Model Collections
 
-### 📏 Metrics
+| Collection | Format | Contents | Links |
+|------------|--------|----------|-------|
+| robot_descriptions.py | URDF, MJCF | Python loader for a large curated set of robot descriptions | [[GitHub]](https://github.com/robot-descriptions/robot_descriptions.py) |
+| Awesome Robot Descriptions | URDF, MJCF, Xacro | Curated index of robot description repositories | [[GitHub]](https://github.com/robot-descriptions/awesome-robot-descriptions) |
+| MuJoCo Menagerie | MJCF | High-quality, quality-checked models of arms, hands, quadrupeds, and humanoids | [[GitHub]](https://github.com/google-deepmind/mujoco_menagerie) |
+| example-robot-data | URDF, SRDF | Robot models used in the Pinocchio and Gepetto ecosystem | [[GitHub]](https://github.com/Gepetto/example-robot-data) |
+| URDF Files Dataset | URDF | Collection of URDF files gathered from many sources for tool testing | [[GitHub]](https://github.com/Daniella1/urdf_files_dataset) |
 
-Which metric matters depends on what the system is asked to produce. A SLAM system can have an excellent trajectory and a poor map, or the reverse, so results are normally reported per group below. ↓ means lower is better, ↑ means higher is better.
+### Motion Datasets
 
-#### Trajectory Accuracy
+| Dataset | Year | Contents | Used For | Links |
+|---------|------|----------|----------|-------|
+| CMU Graphics Lab Motion Capture Database | 2003 | Optical motion capture of a wide range of human activities | Retargeting, whole-body IK | [[Website]](http://mocap.cs.cmu.edu/) |
+| Human3.6M | 2014 | 3.6 million human poses with synchronized video | Pose estimation, human kinematics | [[TPAMI]](https://doi.org/10.1109/TPAMI.2013.248) |
+| AMASS | 2019 | Unifies many motion capture datasets in a common body model | Humanoid motion retargeting and tracking | [[arXiv]](https://arxiv.org/abs/1904.03278) [[Website]](https://amass.is.tue.mpg.de/) |
+| LAFAN1 | 2020 | High-quality locomotion and action capture released with a motion in-betweening study | Retargeting, motion synthesis | [[GitHub]](https://github.com/ubisoft/ubisoft-laforge-animation-dataset) |
 
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **ATE (Absolute Trajectory Error), RMSE** | Global consistency: distance between estimated and ground-truth positions after aligning the two trajectories | ↓ | SE(3) alignment for metric systems, Sim(3) for monocular. The default on TUM RGB-D, EuRoC, and Replica |
-| **RPE (Relative Pose Error), translation and rotation** | Local drift over a fixed time or distance interval | ↓ | The right metric for odometry, since it is not dominated by one early error |
-| **KITTI relative drift, t_rel (%) and r_rel (°/100 m)** | Translation and rotation error averaged over sub-sequences of 100 to 800 m | ↓ | Standard for driving-scale odometry |
-| **Scale error / scale drift** | How far the estimated scale is from metric, and how it changes along the path | ↓ | Monocular systems only |
-| **Pose AUC@τ, RRA / RTA** | Share of frame pairs whose relative rotation and translation angular errors fall under a threshold | ↑ | Common for feed-forward reconstruction models |
-| **NEES / NIS (consistency)** | Whether the estimator's reported covariance matches its actual error | ≈ state dimension | Used for filters and VIO; an overconfident estimator is unsafe to fuse |
-| **Success / completion rate** | Fraction of sequences or of the trajectory tracked without failure | ↑ | Robustness; always report alongside ATE, which is only defined where tracking survived |
+### Standards & Benchmark Suites
 
-For estimated poses $P_i$, ground-truth poses $Q_i$, and the alignment $S$ between them:
+| Resource | Description | Links |
+|----------|-------------|-------|
+| ISO 9283 | Performance criteria and test methods for industrial manipulators, including pose accuracy and repeatability. | [[ISO]](https://www.iso.org/standard/22244.html) |
+| MotionBenchMaker | Tool for generating and benchmarking manipulation motion planning datasets across robots and scenes. | [[arXiv]](https://arxiv.org/abs/2112.06402) [[GitHub]](https://github.com/KavrakiLab/motion_bench_maker) |
+| ik_benchmarking | Utilities for benchmarking MoveIt inverse kinematics plugins on success rate and solve time. | [[GitHub]](https://github.com/PickNikRobotics/ik_benchmarking) |
 
-```math
-\mathrm{ATE}_{\mathrm{RMSE}} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\left\lVert \mathrm{trans}\left(Q_i^{-1}\, S\, P_i\right)\right\rVert^{2}}
-```
+### Metrics
 
-```math
-E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right), \qquad \mathrm{RPE}_{\mathrm{trans}} = \sqrt{\frac{1}{M}\sum_{i=1}^{M}\left\lVert \mathrm{trans}(E_i)\right\rVert^{2}}
-```
-
-#### Map & Reconstruction Quality
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **Accuracy (cm)** | Mean distance from reconstructed points to the nearest ground-truth surface | ↓ | Penalizes wrong geometry |
-| **Completion (cm)** | Mean distance from ground-truth points to the nearest reconstructed surface | ↓ | Penalizes missing geometry |
-| **Completion ratio (%)** | Share of ground-truth points with a reconstructed point within a threshold (often 5 cm) | ↑ | |
-| **Chamfer distance** | Average of accuracy and completion | ↓ | |
-| **F-score@τ** | Harmonic mean of precision and recall at distance threshold τ | ↑ | Less sensitive to outliers than Chamfer |
-| **Depth L1 (cm)** | Error between rendered and ground-truth depth | ↓ | Standard for neural implicit and Gaussian SLAM |
-| **Mean map entropy** | Sharpness of a point cloud map, computed without ground truth | ↓ | Useful for LiDAR maps in the field |
-
-#### Rendering Quality
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **PSNR (dB)** | Pixel-wise fidelity of rendered images | ↑ | |
-| **SSIM** | Structural similarity to the reference image | ↑ | |
-| **LPIPS** | Perceptual distance in a learned feature space | ↓ | |
-
-> ⚠ Many SLAM papers report rendering metrics on the *training* views. Scores on held-out novel views are lower and say more about map quality, so check which one is being reported.
-
-#### Place Recognition & Loop Closure
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **Recall@K** | Share of queries with a correct match in the top K retrievals (within a distance threshold) | ↑ | Standard for VPR and LiDAR place recognition |
-| **Precision-recall curve, AUC / average precision** | Trade-off between false and missed loop closures | ↑ | |
-| **Maximum recall at 100% precision** | How many loops are found with zero false positives | ↑ | The most SLAM-relevant number, since one false loop can corrupt the map |
-| **Registration recall, relative rotation / translation error** | Whether the pose estimated for a detected loop is correct | ↑ / ↓ | For geometric verification and registration |
-
-#### Semantic & Open-Vocabulary Mapping
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **mIoU, mAcc, fwIoU** | Per-class overlap and accuracy of 3D semantic labels | ↑ | |
-| **Panoptic quality (PQ)** | Joint segmentation and instance recognition quality | ↑ | |
-| **Open-vocabulary query success / retrieval recall** | Whether a text query returns the correct object or region | ↑ | |
-| **Scene graph node and edge precision / recall** | Correctness of detected objects, rooms, and relations | ↑ | |
-
-#### Dynamic Scenes
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **Object motion error** | Per-object relative pose error in translation and rotation | ↓ | Object-aware SLAM such as VDO-SLAM and DynoSAM |
-| **Moving-object segmentation IoU** | Overlap between predicted and true moving points or pixels | ↑ | |
-| **Preservation rate / rejection rate** | Share of static points kept and of dynamic points removed when cleaning a map | ↑ | Static LiDAR map building, introduced with ERASOR |
-
-#### Efficiency & Resources
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **FPS (tracking, mapping, whole system)** | Throughput | ↑ | Report whole-system FPS; tracking-only numbers hide slow mapping |
-| **Per-frame latency** | Delay from sensor input to pose output | ↓ | What matters for closed-loop control |
-| **Peak RAM / GPU memory** | Runtime memory | ↓ | |
-| **Map size (MB, parameters, number of Gaussians)** | Storage cost of the map | ↓ | |
-| **CPU load / power** | Compute and energy budget | ↓ | Decides whether it runs onboard |
-
-#### Multi-Robot
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **Joint ATE in a common frame** | Accuracy of all robot trajectories after merging | ↓ | |
-| **Inter-robot loop closure precision / recall** | Quality of cross-robot data association | ↑ | |
-| **Communication volume (kB, messages)** | Data exchanged between robots | ↓ | |
-
-#### Memory & Long-Term Operation
-
-| Metric | What It Measures | Better | Notes |
-|--------|------------------|:------:|-------|
-| **Map growth rate** | How map size and processing time scale with operating time and revisits | Bounded | The core test of memory management |
-| **Cross-session localization success / ATE** | Whether the robot still localizes in a map built days or seasons earlier | ↑ / ↓ | |
-| **Change detection precision / recall** | Whether added, removed, and moved objects are found | ↑ | |
-| **Forgetting** | Drop in performance on earlier environments after adapting to new ones | ↓ | Continual-learning SLAM |
-| **Memory retrieval recall** | Whether the relevant stored observation is recalled for a query | ↑ | |
-| **Embodied QA accuracy, task success, SPL** | Whether an agent using the memory answers correctly or reaches the goal efficiently | ↑ | OpenEQA, GOAT-Bench |
-
-#### Which Metric for Which Task?
-
-| Task | Report First | Then |
-|------|--------------|------|
-| Odometry for control | RPE, per-frame latency | Success rate, CPU load |
-| Globally consistent SLAM | ATE RMSE | Loop closure precision / recall, success rate |
-| Dense geometry for planning | Accuracy, completion, F-score | Map size, mapping FPS |
-| Photorealistic mapping | PSNR / SSIM / LPIPS on held-out views, depth L1 | ATE, number of Gaussians, whole-system FPS |
-| Uncalibrated or feed-forward SLAM | ATE with Sim(3) alignment, pose AUC | Chamfer distance, GPU memory |
-| Semantic and open-vocabulary maps | mIoU, query success | Scene graph precision / recall |
-| Dynamic scenes | ATE in dynamic sequences, object motion error | Moving-object IoU |
-| Multi-robot | Joint ATE, communication volume | Inter-robot loop closure precision |
-| Long-term operation and memory | Map growth rate, cross-session localization | Change detection, embodied QA accuracy |
-
-### Memory & Long-Horizon Benchmarks
-
-| Benchmark | Year | What It Tests | Links |
-|-----------|------|---------------|-------|
-| OpenEQA | 2024 | Open-vocabulary embodied question answering over 180+ real environments, including an episodic-memory setting where agents answer from past observations. | [[CVPR]](https://openaccess.thecvf.com/content/CVPR2024/html/Majumdar_OpenEQA_Embodied_Question_Answering_in_the_Era_of_Foundation_Models_CVPR_2024_paper.html) [[GitHub]](https://github.com/facebookresearch/open-eqa) |
-| GOAT-Bench | 2024 | Multi-modal lifelong navigation over sequences of object, language, and image goals, comparing explicit and implicit scene memories. | [[arXiv]](https://arxiv.org/abs/2404.06609) [[GitHub]](https://github.com/Ram81/goat-bench) |
-| FindingDory | 2025 | Whether embodied agents can recall relevant information from long past experience and act on it. | [[arXiv]](https://arxiv.org/abs/2506.15635) [[GitHub]](https://github.com/findingdory-benchmark/findingdory-habitat) |
-
-### Evaluation Tools
-
-| Tool | Description | Links |
-|------|-------------|-------|
-| evo | Python package for evaluating and comparing odometry and SLAM trajectories (ATE, RPE, plots) across common formats. | [[GitHub]](https://github.com/MichaelGrupp/evo) |
-| rpg_trajectory_evaluation | Toolbox for quantitative trajectory evaluation of VO/VIO with multiple alignment options. | [[GitHub]](https://github.com/uzh-rpg/rpg_trajectory_evaluation) |
-| SLAMBench | Benchmarking framework measuring speed, accuracy, and energy of SLAM systems across platforms. | [[arXiv]](https://arxiv.org/abs/1410.2167) [[GitHub]](https://github.com/pamela-project/slambench) |
+| Metric | Measures | Used For |
+|--------|----------|----------|
+| **Position Error** | Distance between achieved and target end-effector position | IK accuracy |
+| **Orientation Error** | Geodesic angle between achieved and target orientation | IK accuracy |
+| **Success (Solve) Rate** | Fraction of random reachable targets solved within tolerance and limits | Solver reliability |
+| **Solve Time** | Time per query, or queries per second for batched solvers | Real-time suitability |
+| **Solution Count / Diversity** | Number of distinct solutions; coverage of the self-motion manifold | Analytical and generative IK |
+| **Manipulability / Condition Number** | Distance from singularity and isotropy of the Jacobian | Dexterity, design, redundancy resolution |
+| **Joint-Limit Margin** | Distance of the solution from joint limits | Solution quality |
+| **Joint Velocity / Jerk** | Smoothness of consecutive solutions | Teleoperation and tracking |
+| **Pose Accuracy / Repeatability** | Deviation from commanded pose, and spread over repeated visits (ISO 9283) | Calibration and hardware qualification |
+| **Residual After Calibration** | Remaining error on held-out measurement poses | Calibration quality |
 
 ---
 
 ## 🧰 Open-Source Frameworks
 
-### Complete SLAM Systems
+### Kinematics & Rigid-Body Libraries
 
-| Framework | Sensors | Description | Links |
-|-----------|---------|-------------|-------|
-| ORB-SLAM3 | Mono, stereo, RGB-D, IMU | Reference feature-based visual and visual-inertial SLAM with multi-map support. | [[GitHub]](https://github.com/UZ-SLAMLab/ORB_SLAM3) |
-| stella_vslam | Mono, stereo, RGB-D | Community-maintained fork of OpenVSLAM supporting many camera models. | [[GitHub]](https://github.com/stella-cv/stella_vslam) |
-| RTAB-Map | RGB-D, stereo, LiDAR | Mature multi-sensor graph SLAM with ROS integration and long-term memory management. | [[GitHub]](https://github.com/introlab/rtabmap) |
-| Cartographer | 2D/3D LiDAR, IMU | Real-time submap-based LiDAR SLAM from Google. | [[GitHub]](https://github.com/cartographer-project/cartographer) |
-| SLAM Toolbox | 2D LiDAR | Default 2D SLAM for ROS 2 and Nav2 with lifelong mapping. | [[GitHub]](https://github.com/SteveMacenski/slam_toolbox) |
-| Kimera | Stereo, IMU | Metric-semantic SLAM: VIO, robust PGO, mesh, and semantics. | [[GitHub]](https://github.com/MIT-SPARK/Kimera) |
-| OpenVINS | Mono/stereo, IMU | Documented filter-based VIO research platform. | [[GitHub]](https://github.com/rpng/open_vins) |
-| FAST-LIO | LiDAR, IMU | Widely deployed LiDAR-inertial odometry for spinning and solid-state LiDARs. | [[GitHub]](https://github.com/hku-mars/FAST_LIO) |
-| GLIM | LiDAR, IMU, camera | Extensible GPU-accelerated range-inertial mapping framework. | [[GitHub]](https://github.com/koide3/glim) |
-| pySLAM | Mono, stereo, RGB-D | Python framework for visual SLAM that integrates classical and learned features, loop closing, and dense mapping back-ends. | [[GitHub]](https://github.com/luigifreda/pyslam) |
-| Isaac ROS Visual SLAM | Stereo, IMU | GPU-accelerated visual-inertial SLAM (cuVSLAM) packaged for ROS 2. | [[GitHub]](https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam) |
+| Framework | Language | Description | Links |
+|-----------|----------|-------------|-------|
+| Pinocchio | C++, Python | Fast rigid-body kinematics and dynamics with analytical derivatives. | [[GitHub]](https://github.com/stack-of-tasks/pinocchio) |
+| Drake | C++, Python | Multibody modeling with nonlinear, differential, and global inverse kinematics. | [[GitHub]](https://github.com/RobotLocomotion/drake) |
+| MuJoCo | C, Python | Physics engine whose kinematics, Jacobians, and models underpin much of current robot learning. | [[GitHub]](https://github.com/google-deepmind/mujoco) |
+| Orocos KDL | C++, Python | Kinematic chains and classic FK, IK, and Jacobian solvers; the long-time ROS default. | [[GitHub]](https://github.com/orocos/orocos_kinematics_dynamics) |
+| RBDL | C++, Python | Rigid body dynamics library implementing Featherstone's algorithms, with kinematics and IK. | [[GitHub]](https://github.com/rbdl/rbdl) |
+| DART | C++, Python | Kinematics and dynamics in generalized coordinates with accurate Jacobians. | [[GitHub]](https://github.com/dartsim/dart) |
+| iDynTree | C++, Python, MATLAB | Multibody kinematics and dynamics for floating-base robots, with identification tools. | [[GitHub]](https://github.com/gbionics/idyntree) |
+| Klampt | C++, Python | Modeling, kinematics, planning, and simulation toolkit with a compact IK interface. | [[GitHub]](https://github.com/krishauser/Klampt) |
+| Robotics Toolbox for Python | Python | Teaching and research toolbox with DH, ETS, and URDF models and many IK solvers. | [[GitHub]](https://github.com/petercorke/robotics-toolbox-python) |
+| Modern Robotics | Python, MATLAB, Mathematica | Reference implementations of the screw-theoretic algorithms from the textbook. | [[GitHub]](https://github.com/NxRLab/ModernRobotics) |
+| OpenRAVE | C++, Python | Planning environment that includes the IKFast analytical solver generator. | [[GitHub]](https://github.com/rdiankov/openrave) |
+| MoveIt 2 | C++, Python | ROS 2 manipulation framework with a plugin interface for kinematics solvers. | [[GitHub]](https://github.com/moveit/moveit2) |
 
-### Optimization, Geometry & Mapping Libraries
+### Inverse Kinematics Solvers
+
+| Solver | Approach | Description | Links |
+|--------|----------|-------------|-------|
+| TRAC-IK | Newton plus SQP | Drop-in replacement for KDL's IK with better handling of joint limits. | [[Bitbucket]](https://bitbucket.org/traclabs/trac_ik) |
+| bio_ik | Memetic optimization | MoveIt plugin for multi-goal IK on arbitrary kinematic trees. | [[GitHub]](https://github.com/TAMS-Group/bio_ik) |
+| pick_ik | Gradient plus memetic | MoveIt 2 kinematics plugin with configurable cost functions. | [[GitHub]](https://github.com/PickNikRobotics/pick_ik) |
+| Pink | Differential IK (QP) | Weighted-task inverse kinematics built on Pinocchio. | [[GitHub]](https://github.com/pink-kinematics/pink) |
+| mink | Differential IK (QP) | Weighted-task inverse kinematics built on MuJoCo. | [[GitHub]](https://github.com/kevinzakka/mink) |
+| PlaCo | Whole-body QP | Task-space planning and control for legged and wheeled robots on Pinocchio. | [[GitHub]](https://github.com/Rhoban/placo) |
+| TSID | Task-space inverse dynamics | Prioritized whole-body control formulated as QPs on Pinocchio. | [[GitHub]](https://github.com/stack-of-tasks/tsid) |
+| relaxed_ik_core | Weighted optimization | Rust core of RelaxedIK, RangedIK, and CollisionIK. | [[GitHub]](https://github.com/uwgraphics/relaxed_ik_core) |
+| EAIK | Analytical | Closed-form IK by automatic subproblem decomposition. | [[GitHub]](https://github.com/OstermD/EAIK) |
+| IKPy | Numerical | Lightweight pure-Python IK from URDF or DH descriptions. | [[GitHub]](https://github.com/Phylliade/ikpy) |
+| cuRobo | GPU optimization | Batched collision-aware IK and motion generation. | [[GitHub]](https://github.com/NVlabs/curobo) |
+| PyRoki | JAX least squares | Modular kinematic optimization for IK, retargeting, and trajectories. | [[GitHub]](https://github.com/chungmin99/pyroki) |
+| pytorch_kinematics | Differentiable, batched | Parallel forward kinematics, Jacobians, and IK in PyTorch. | [[GitHub]](https://github.com/UM-ARM-Lab/pytorch_kinematics) |
+
+### Geometry, Transform & Model Tools
 
 | Library | Purpose | Description | Links |
 |---------|---------|-------------|-------|
-| GTSAM | Factor graph optimization | Smoothing and mapping library with iSAM2, IMU preintegration, and Python/MATLAB wrappers. | [[GitHub]](https://github.com/borglab/gtsam) |
-| g2o | Graph optimization | General sparse nonlinear least squares for SLAM and bundle adjustment. | [[GitHub]](https://github.com/RainerKuemmerle/g2o) |
-| Ceres Solver | Nonlinear least squares | Google's general-purpose solver, used by Cartographer, VINS, and many others. | [[GitHub]](https://github.com/ceres-solver/ceres-solver) |
-| Sophus | Lie groups | C++ implementation of SO(3), SE(3), Sim(3) for geometry on manifolds. | [[GitHub]](https://github.com/strasdat/Sophus) |
-| COLMAP | SfM / MVS | Standard offline structure-from-motion and multi-view stereo pipeline; often the ground-truth generator. | [[GitHub]](https://github.com/colmap/colmap) |
-| hloc | Visual localization | Hierarchical localization toolbox with learned features and matchers. | [[GitHub]](https://github.com/cvg/Hierarchical-Localization) |
-| Open3D | 3D data processing | Point cloud, mesh, registration, and reconstruction tools with a tensor/GPU back-end. | [[GitHub]](https://github.com/isl-org/Open3D) |
-| PCL | Point clouds | Classic library for point cloud filtering, features, and registration. | [[GitHub]](https://github.com/PointCloudLibrary/pcl) |
-| small_gicp | Registration | Efficient, parallelized point cloud registration (ICP, GICP, VGICP). | [[GitHub]](https://github.com/koide3/small_gicp) |
-| Nerfstudio | Neural fields | Modular framework for training NeRF and Gaussian Splatting models. | [[GitHub]](https://github.com/nerfstudio-project/nerfstudio) |
-| gsplat | Gaussian Splatting | CUDA-accelerated differentiable Gaussian rasterization with Python bindings. | [[GitHub]](https://github.com/nerfstudio-project/gsplat) |
-| Nav2 | Navigation | ROS 2 navigation stack that consumes SLAM maps for planning and control. | [[GitHub]](https://github.com/ros-navigation/navigation2) |
+| Sophus | Lie groups (C++) | SO(3), SE(3), and Sim(3) for geometry on manifolds. | [[GitHub]](https://github.com/strasdat/Sophus) |
+| manif | Lie groups (C++, Python) | Small header-only Lie theory library with analytic Jacobians. | [[GitHub]](https://github.com/artivis/manif) |
+| jaxlie | Lie groups (JAX) | Rigid transforms and Lie groups for differentiable programming. | [[GitHub]](https://github.com/brentyi/jaxlie) |
+| RoMa | Rotations (PyTorch) | Differentiable rotation representations and conversions. | [[GitHub]](https://github.com/naver/roma) |
+| Spatial Maths for Python | Poses and twists | Classes for SO(n), SE(n), quaternions, and twists with plotting. | [[GitHub]](https://github.com/rai-opensource/spatialmath-python) |
+| pytransform3d | Transforms | Conversions between rotation and transform conventions, with visualization and transform graphs. | [[GitHub]](https://github.com/dfki-ric/pytransform3d) |
+| tf2 | Frame graph | ROS 2 library tracking coordinate frames over time. | [[GitHub]](https://github.com/ros2/geometry2) |
+| yourdfpy | URDF | Python URDF parser and visualizer with forward kinematics. | [[GitHub]](https://github.com/clemense/yourdfpy) |
+| PyElastica | Cosserat rods | Simulation of slender soft bodies used for continuum and soft robot modeling. | [[GitHub]](https://github.com/GazzolaLab/PyElastica) |
 
 ---
 
 ## 🌍 Applications
 
-| Domain | Role of SLAM | Typical Stack |
-|--------|--------------|---------------|
-| **🚗 Autonomous Driving** | HD-map building and map-relative localization | LiDAR-inertial odometry, GNSS fusion, place recognition |
-| **🚁 Aerial Robots** | GPS-denied flight, inspection, and exploration | Visual-inertial odometry, LiDAR-inertial odometry |
-| **🦿 Legged & Field Robots** | State estimation over rough terrain; subterranean exploration | Multi-sensor fusion with leg kinematics, multi-robot SLAM |
-| **🧹 Service & Home Robots** | Room coverage, object search, and long-term operation | 2D LiDAR or visual SLAM, semantic and open-vocabulary maps |
-| **🥽 AR / VR / Spatial Computing** | Head and device tracking, persistent anchors | Visual-inertial SLAM, relocalization, dense meshing |
-| **🏭 Warehouses & Logistics** | Fleet localization in changing environments | 2D/3D LiDAR SLAM, lifelong mapping |
-| **🏗 Construction & Surveying** | As-built capture and digital twins | Handheld LiDAR-visual-inertial mapping, Gaussian Splatting |
-| **🌊 Underwater & Space** | Navigation with no GPS and poor visibility | Sonar, visual-inertial, and terrain-relative SLAM |
-| **🦾 Mobile Manipulation** | Finding, reaching, and re-finding objects | Scene graphs, open-vocabulary 3D memory |
-| **🩺 Medical Robotics** | Endoscope tracking and deformable tissue reconstruction | Monocular and stereo deformable SLAM |
+| Domain | Role of Kinematics | Typical Stack |
+|--------|--------------------|---------------|
+| **🏭 Industrial Automation** | Cartesian motion, tool-frame programming, offline programming | Closed-form IK, calibrated DH models, ISO 9283 testing |
+| **🤝 Collaborative & Service Manipulation** | Reaching and grasping in clutter with 7-DOF arms | Numerical or GPU IK, redundancy resolution, collision-aware solvers |
+| **🧍 Humanoids** | Whole-body reaching, balance, and imitation of human motion | Differential IK with QP, motion retargeting, centroidal models |
+| **🦿 Legged Locomotion** | Foot placement and base state estimation | Leg IK, kinematic odometry fused with an IMU |
+| **🚗 Autonomous Driving** | Path feasibility and tracking | Kinematic bicycle model, Dubins and Reeds-Shepp paths |
+| **🚜 Mobile Manipulation** | Coordinating a base and an arm | Unified base-arm kinematics, reachability maps for base placement |
+| **🩺 Surgical Robotics** | Motion through a fixed entry point; flexible instruments | Remote-center-of-motion constraints, continuum kinematics |
+| **🎮 Teleoperation & VR** | Mapping an operator's motion to a robot in real time | Smooth optimization-based IK, hand retargeting |
+| **🎬 Animation & Digital Humans** | Posing characters and transferring motion | CCD, FABRIK, full-body IK, learned retargeting |
+| **✈ Simulators & Precision Machines** | High-stiffness six-axis motion | Parallel kinematics, singularity-free workspace design |
+| **📏 Metrology & Machining** | Reaching absolute accuracy targets | Geometric and non-geometric calibration |
 
 ---
 
@@ -1134,16 +744,16 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 
 | Direction | Open Question |
 |-----------|---------------|
-| **Foundation models as the front-end** | How far can feed-forward geometry (DUSt3R, VGGT and successors) replace hand-built tracking, and how should classical optimization be layered on top? |
-| **Dynamic and deformable worlds (4D SLAM)** | Can a single system track the camera, moving objects, and changing geometry without treating dynamics as outliers? |
-| **Lifelong and long-term mapping** | How should maps be updated, compressed, and forgotten as environments change over months? |
-| **Maps as memory for embodied agents** | What map representation best serves language models and policies: scene graphs, feature fields, or learned latent memory? |
-| **Scalable photorealistic maps** | How do Gaussian and neural maps scale to city size with bounded memory and consistent loop closure? |
-| **Uncertainty and certifiable robustness** | How can learned components expose calibrated uncertainty, and when can a SLAM result be certified as correct? |
-| **Resource-aware SLAM** | How can modern dense and learned SLAM run on milliwatt-to-watt platforms such as headsets and nano-drones? |
-| **Active SLAM** | How should a robot choose its motion to improve its own map and localization? |
-| **Heterogeneous multi-robot teams** | How can robots with different sensors and viewpoints share one map over limited bandwidth? |
-| **New sensing modalities** | How can 4D radar, event cameras, and thermal imaging be fused as first-class sensors? |
+| **Kinematics inside learned policies** | When should a policy output end-effector targets solved by IK, and when should it output joint commands directly? |
+| **Cross-embodiment generalization** | Can one model produce IK or retargeted motion for robots it was never trained on, given only a description? |
+| **Learned IK with guarantees** | How can generative solvers reach the precision and completeness of analytical ones, or certify what they miss? |
+| **Retargeting at scale** | How should human motion be mapped to humanoids so that the result is physically trackable and not merely kinematically similar? |
+| **Kinematics from perception** | Can a robot's kinematic model be recovered and kept calibrated from cameras alone? |
+| **Soft and continuum robots** | What is the right low-dimensional kinematic description for robots whose shape depends on load and contact? |
+| **Contact-rich, closed-chain tasks** | How should solvers handle the changing closed loops created by bimanual manipulation and multi-contact locomotion? |
+| **Global and certifiable IK** | Can infeasibility certificates and global optima be computed at interactive rates? |
+| **Co-design** | How can kinematic structure be optimized jointly with control for a task? |
+| **Unified toolchains** | Can one differentiable, batched kinematics stack serve planning, control, calibration, and learning? |
 
 ---
 
@@ -1151,33 +761,36 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 
 ### Surveys & Tutorials
 
-1. Durrant-Whyte and Bailey, "Simultaneous Localization and Mapping: Part I," IEEE RAM, 2006. [[DOI]](https://doi.org/10.1109/MRA.2006.1638022)
-2. Bailey and Durrant-Whyte, "Simultaneous Localization and Mapping (SLAM): Part II," IEEE RAM, 2006. [[DOI]](https://doi.org/10.1109/MRA.2006.1678144)
-3. Grisetti et al., "A Tutorial on Graph-Based SLAM," IEEE ITS Magazine, 2010. [[DOI]](https://doi.org/10.1109/MITS.2010.939925)
-4. Scaramuzza and Fraundorfer, "Visual Odometry: Part I, The First 30 Years and Fundamentals," IEEE RAM, 2011. [[DOI]](https://doi.org/10.1109/MRA.2011.943233)
-5. Cadena et al., "Past, Present, and Future of Simultaneous Localization and Mapping: Toward the Robust-Perception Age," IEEE T-RO, 2016. [[arXiv]](https://arxiv.org/abs/1606.05830)
-6. Lowry et al., "Visual Place Recognition: A Survey," IEEE T-RO, 2016. [[DOI]](https://doi.org/10.1109/TRO.2015.2496823)
-7. Davison, "FutureMapping: The Computational Structure of Spatial AI Systems," 2018. [[arXiv]](https://arxiv.org/abs/1803.11288)
-8. Huang, "Visual-Inertial Navigation: A Concise Review," ICRA, 2019. [[arXiv]](https://arxiv.org/abs/1906.02650)
-9. Rosen et al., "Advances in Inference and Representation for Simultaneous Localization and Mapping," Annual Review of Control, Robotics, and Autonomous Systems, 2021. [[arXiv]](https://arxiv.org/abs/2103.05041)
-10. Lajoie et al., "Towards Collaborative Simultaneous Localization and Mapping: A Survey of the Current Research Landscape," 2021. [[arXiv]](https://arxiv.org/abs/2108.08325)
-11. Ebadi et al., "Present and Future of SLAM in Extreme Underground Environments," IEEE T-RO, 2023. [[arXiv]](https://arxiv.org/abs/2208.01787)
-12. Tosi et al., "How NeRFs and 3D Gaussian Splatting are Reshaping SLAM: A Survey," 2024. [[arXiv]](https://arxiv.org/abs/2402.13255)
-13. Zhu et al., "3D Gaussian Splatting in Robotics: A Survey," 2024. [[arXiv]](https://arxiv.org/abs/2410.12262)
-14. "Semantic Mapping in Indoor Embodied AI: A Survey on Advances, Challenges, and Future Directions," 2025. [[arXiv]](https://arxiv.org/abs/2501.05750)
-15. "Advances in Feed-Forward 3D Reconstruction and View Synthesis: A Survey," 2025. [[arXiv]](https://arxiv.org/abs/2507.14501)
-16. "Semantic Visual Simultaneous Localization and Mapping: A Survey on State of the Art, Challenges, and Future Directions," 2025. [[arXiv]](https://arxiv.org/abs/2510.00783)
-17. "Towards Next-Generation SLAM: A Survey on 3DGS-SLAM Focusing on Performance, Robustness, and Future Directions," 2026. [[arXiv]](https://arxiv.org/abs/2602.04251)
+1. Klein and Huang, "Review of Pseudoinverse Control for Use with Kinematically Redundant Manipulators," IEEE Trans. SMC, 1983. [[DOI]](https://doi.org/10.1109/TSMC.1983.6313123)
+2. Siciliano, "Kinematic Control of Redundant Robot Manipulators: A Tutorial," Journal of Intelligent and Robotic Systems, 1990. [[DOI]](https://doi.org/10.1007/BF00126069)
+3. Hollerbach and Wampler, "The Calibration Index and Taxonomy for Robot Kinematic Calibration Methods," IJRR, 1996. [[DOI]](https://doi.org/10.1177/027836499601500604)
+4. Buss, "Introduction to Inverse Kinematics with Jacobian Transpose, Pseudoinverse and Damped Least Squares Methods," 2004. [[PDF]](https://mathweb.ucsd.edu/~sbuss/ResearchWeb/ikmethods/iksurvey.pdf)
+5. Webster and Jones, "Design and Kinematic Modeling of Constant Curvature Continuum Robots: A Review," IJRR, 2010. [[DOI]](https://doi.org/10.1177/0278364910368147)
+6. Burgner-Kahrs, Rucker, and Choset, "Continuum Robots for Medical Applications: A Survey," IEEE T-RO, 2015. [[DOI]](https://doi.org/10.1109/TRO.2015.2489500)
+7. Patel and Sobh, "Manipulator Performance Measures: A Comprehensive Literature Survey," Journal of Intelligent and Robotic Systems, 2015. [[DOI]](https://doi.org/10.1007/s10846-014-0024-y)
+8. Waldron and Schmiedeler, "Kinematics," Springer Handbook of Robotics, 2nd ed., 2016. [[DOI]](https://doi.org/10.1007/978-3-319-32552-1_2)
+9. Chiaverini, Oriolo, and Maciejewski, "Redundant Robots," Springer Handbook of Robotics, 2nd ed., 2016. [[DOI]](https://doi.org/10.1007/978-3-319-32552-1_10)
+10. Aristidou, Lasenby, Chrysanthou, and Shamir, "Inverse Kinematics Techniques in Computer Graphics: A Survey," Computer Graphics Forum, 2018. [[DOI]](https://doi.org/10.1111/cgf.13310)
+11. Solà, Deray, and Atchuthan, "A Micro Lie Theory for State Estimation in Robotics," 2018. [[arXiv]](https://arxiv.org/abs/1812.01537)
+12. Haviland and Corke, "Manipulator Differential Kinematics: Part I: Kinematics, Velocity, and Applications," IEEE RAM, 2023. [[arXiv]](https://arxiv.org/abs/2207.01796)
+13. Haviland and Corke, "Manipulator Differential Kinematics: Part II: Acceleration and Advanced Applications," IEEE RAM, 2023. [[arXiv]](https://arxiv.org/abs/2207.01794)
+14. Della Santina, Duriez, and Rus, "Model-Based Control of Soft Robots: A Survey of the State of the Art and Open Challenges," IEEE Control Systems Magazine, 2023. [[arXiv]](https://arxiv.org/abs/2110.01358)
+15. Armanini et al., "Soft Robots Modeling: A Structured Overview," IEEE T-RO, 2023. [[arXiv]](https://arxiv.org/abs/2112.03645)
 
 ### Books & Courses
 
-18. Thrun, Burgard, and Fox, *Probabilistic Robotics*, MIT Press, 2005. [[MIT Press]](https://mitpress.mit.edu/9780262201629/probabilistic-robotics/)
-19. Hartley and Zisserman, *Multiple View Geometry in Computer Vision*, Cambridge University Press, 2004. [[Website]](https://www.robots.ox.ac.uk/~vgg/hzbook/)
-20. Barfoot, *State Estimation for Robotics*, Cambridge University Press, 2nd ed., 2024. [[PDF]](http://asrl.utias.utoronto.ca/~tdb/bib/barfoot_ser24.pdf)
-21. Gao et al., *Introduction to Visual SLAM: From Theory to Practice*, Springer, 2021. [[GitHub]](https://github.com/gaoxiang12/slambook-en)
-22. Carlone, Kim, Barfoot, Cremers, and Dellaert (eds.), *SLAM Handbook: From Localization and Mapping to Spatial Intelligence*, Cambridge University Press. [[GitHub]](https://github.com/SLAM-Handbook-contributors/slam-handbook-public-release)
-23. Dellaert and Kaess, "Factor Graphs for Robot Perception," Foundations and Trends in Robotics, 2017. [[DOI]](https://doi.org/10.1561/2300000043)
-24. Carlone et al., MIT 16.485 *Visual Navigation for Autonomous Vehicles (VNAV)*. [[Website]](https://vnav.mit.edu/)
+16. Murray, Li, and Sastry, *A Mathematical Introduction to Robotic Manipulation*, CRC Press, 1994. [[Website]](https://www.cds.caltech.edu/~murray/mlswiki/index.php/Main_Page)
+17. Craig, *Introduction to Robotics: Mechanics and Control*, Pearson, 4th ed., 2017.
+18. Spong, Hutchinson, and Vidyasagar, *Robot Modeling and Control*, Wiley, 2nd ed., 2020.
+19. Siciliano, Sciavicco, Villani, and Oriolo, *Robotics: Modelling, Planning and Control*, Springer, 2009. [[DOI]](https://doi.org/10.1007/978-1-84628-642-1)
+20. Lynch and Park, *Modern Robotics: Mechanics, Planning, and Control*, Cambridge University Press, 2017. [[Website]](http://modernrobotics.org)
+21. Corke, *Robotics, Vision and Control: Fundamental Algorithms in Python*, Springer, 3rd ed., 2023. [[DOI]](https://doi.org/10.1007/978-3-031-06469-2)
+22. Selig, *Geometric Fundamentals of Robotics*, Springer, 2nd ed., 2005. [[DOI]](https://doi.org/10.1007/b138859)
+23. Featherstone, *Rigid Body Dynamics Algorithms*, Springer, 2008. [[DOI]](https://doi.org/10.1007/978-1-4899-7560-7)
+24. Merlet, *Parallel Robots*, Springer, 2nd ed., 2006. [[DOI]](https://doi.org/10.1007/1-4020-4133-0)
+25. Siegwart, Nourbakhsh, and Scaramuzza, *Introduction to Autonomous Mobile Robots*, MIT Press, 2nd ed., 2011. [[MIT Press]](https://mitpress.mit.edu/9780262015356/introduction-to-autonomous-mobile-robots/)
+26. Siciliano and Khatib (eds.), *Springer Handbook of Robotics*, Springer, 2nd ed., 2016. [[DOI]](https://doi.org/10.1007/978-3-319-32552-1)
+27. Tedrake, *Robotic Manipulation: Perception, Planning, and Control*, MIT course notes. [[Website]](https://manipulation.csail.mit.edu/)
 
 ---
 
@@ -1186,11 +799,11 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 If you find this repository useful, please consider citing it:
 
 ```bibtex
-@misc{ithinkthereforeimap2026,
-  title        = {I Think, Therefore I Map: Your Guide to SLAM in Robotic Systems},
+@misc{ithinkthereforeimove2026,
+  title        = {I Think, Therefore I Move: Your Guide to Robot Kinematics},
   author       = {SuperMadee},
   year         = {2026},
-  howpublished = {\url{https://github.com/SuperMadee/IThinkThereforeIMap}}
+  howpublished = {\url{https://github.com/SuperMadee/IThinkThereforeIMove}}
 }
 ```
 
@@ -1208,7 +821,7 @@ Contributions are welcome! If you'd like to add new papers, fix errors, or sugge
 
 Please make sure any added paper includes:
 
-- The system or paper name as it is commonly known
+- The method or paper name as it is commonly known
 - The year of publication
 - A one-sentence description of what is new, not just what it is
 - Links to the paper (arXiv / DOI) and code (if available)
@@ -1220,6 +833,6 @@ Please make sure any added paper includes:
 
 **⭐ Star this repo if you find it helpful!**
 
-Made with ❤ for the Robotics and SLAM Research Community
+Made with ❤ for the Robotics and Kinematics Research Community
 
 </div>
