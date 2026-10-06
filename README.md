@@ -109,7 +109,7 @@ SLAM is distinct from related concepts:
 
 ### The SLAM Problem in One Equation
 
-Modern SLAM is formulated as **maximum a posteriori (MAP) estimation** over a factor graph. Given measurements $Z = \{z_k\}$, find the states $X$ (poses, landmarks, calibration) that best explain them:
+Modern SLAM is formulated as **maximum a posteriori (MAP) estimation** over a factor graph. Given measurements $Z = \lbrace z_k \rbrace$, find the states $X$ (poses, landmarks, calibration) that best explain them:
 
 ```math
 X^{\star} = \arg\max_{X} \; p(X \mid Z) = \arg\min_{X} \sum_{k} \lVert h_k(X_k) - z_k \rVert^{2}_{\Omega_k}
@@ -232,7 +232,7 @@ The pipeline describes the operational lifecycle of a SLAM system.
 
 The taxonomy above describes how SLAM systems are *built*. This section classifies them by what they are *for* and what they are *good at*, so you can go from a job to a shortlist. Every system named here has a full entry in the [Paper Collection](#-paper-collection).
 
-> ℹ **How to read this.** Strengths reflect what each paper reports and how the system is commonly used in practice. They are not rankings from one unified benchmark, and results shift with sensor quality, calibration, and tuning. Always validate on your own data.
+> ℹ️ **How to read this.** Strengths reflect what each paper reports and how the system is commonly used in practice. They are not rankings from one unified benchmark, and results shift with sensor quality, calibration, and tuning. Always validate on your own data.
 
 ---
 
@@ -1013,7 +1013,7 @@ E_i = \left(Q_i^{-1} Q_{i+\Delta}\right)^{-1}\left(P_i^{-1} P_{i+\Delta}\right),
 | **SSIM** | Structural similarity to the reference image | ↑ | |
 | **LPIPS** | Perceptual distance in a learned feature space | ↓ | |
 
-> ⚠ Many SLAM papers report rendering metrics on the *training* views. Scores on held-out novel views are lower and say more about map quality, so check which one is being reported.
+> ⚠️ Many SLAM papers report rendering metrics on the *training* views. Scores on held-out novel views are lower and say more about map quality, so check which one is being reported.
 
 #### Place Recognition & Loop Closure
 
@@ -1250,6 +1250,6 @@ Please make sure any added paper includes:
 
 **⭐ Star this repo if you find it helpful!**
 
-Made with ❤ for the Robotics and SLAM Research Community
+Made with ❤️ for the Robotics and SLAM Research Community
 
 </div>
